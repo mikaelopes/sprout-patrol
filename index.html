@@ -24,7 +24,9 @@
 }
 html,body{height:100%}
 body{background:var(--night);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
-.app{height:100%;max-width:560px;margin:0 auto;padding-inline:16px;padding-block:10px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box;touch-action:none}
+.app{height:100%;max-width:calc(560px * var(--uiz, 1));margin:0 auto;padding-inline:16px;padding-block:10px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box;touch-action:none}
+/* bigger screens: the board grows to fill the space, and the controls/menus scale up with --uiz (set in uiScale) */
+.hud,.xprow,.loadout,.pad,.keys,.overlay>*,.tip,.tutskip,.ability{zoom:var(--uiz,1)}
 .hud{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .hearts{display:flex;gap:3px;flex-wrap:wrap;align-items:center;min-width:0;flex:1}
 .heart{width:19px;height:17px;display:block}
@@ -1138,13 +1140,43 @@ async function bestBackup() {
    copy with more progress wins on connect. Only people who can write to this artifact (its owner, Team members at
    Contributor level) can save; everyone else keeps the browser save + save code. */
 const cloud = { state: 'off', pending: false, ref: null, timer: null, busy: false, dirty: false };
+/* Outside Claude (e.g. the GitHub Pages copy) the same opt-in save runs on Firebase with Google sign-in.
+   Fill FB from the Firebase console (Project settings → Your apps → Web). These keys are public by design;
+   the Firestore rules are what keep each player's save private (saves/{uid}: only that signed-in uid). */
+const FB = { apiKey: '', authDomain: '', projectId: '', appId: '' };
+const FB_V = '10.12.2';
+const inClaude = () => !!(window.claude && window.claude.use);
+const cloudHost = () => inClaude() ? 'claude' : FB.apiKey ? 'firebase' : null;
+const acctName = () => cloudHost() === 'firebase' ? 'Google' : 'Claude';
+const fb = { ready: null, m: null, app: null, auth: null, db: null };
+function fbLoad() { // loaded once at boot so the sign-in popup opens straight from the tap (popup blockers need that)
+  if (fb.ready) return fb.ready;
+  const base = 'https://www.gstatic.com/firebasejs/' + FB_V + '/';
+  fb.ready = (window.__fbMock ? Promise.resolve(window.__fbMock) : Promise.all(['firebase-app', 'firebase-auth', 'firebase-firestore'].map(n => import(base + n + '.js'))).then(([a, u, f]) => ({ ...a, ...u, ...f })))
+    .then(m => { fb.m = m; fb.app = m.initializeApp(FB); fb.auth = m.getAuth(fb.app); fb.db = m.getFirestore(fb.app); return fb; })
+    .catch(e => { fb.ready = null; throw e; });
+  return fb.ready;
+}
+// The same {get, set} shape the Claude db gives, so the connect/compare/choose logic below is shared.
+async function fbRef(interactive) {
+  const f = await fbLoad(), m = f.m;
+  if (f.auth.authStateReady) await f.auth.authStateReady();
+  let u = f.auth.currentUser;
+  if (!u && interactive) {
+    try { u = (await m.signInWithPopup(f.auth, new m.GoogleAuthProvider())).user; }
+    catch (e) { return null; } // closed, blocked or failed: the box says to try again
+  }
+  if (!u) return null;
+  const d = m.doc(f.db, 'saves', u.uid);
+  return { id: u.uid, ref: { get: async () => { const s = await m.getDoc(d); return { exists: s.exists(), data: () => s.data() }; }, set: v => m.setDoc(d, v) } };
+}
 const CL = {
   en: { offer: 'Keep your progress in your Claude account?', connect: 'Connect account', later: 'Not now', on: '✓ Saved to your Claude account.', off: 'Account not connected.',
         signedOut: 'Sign in to Claude to save to your account.', readonly: 'This link can\'t save to accounts. Use your save code.', working: 'Connecting…', disconnect: 'Disconnect', pulled: 'Loaded your account save.' },
   pt: { offer: 'Guardar seu progresso na sua conta Claude?', connect: 'Conectar conta', later: 'Agora não', on: '✓ Salvo na sua conta Claude.', off: 'Conta não conectada.',
         signedOut: 'Entre no Claude para salvar na conta.', readonly: 'Este link não salva em contas. Use seu código.', working: 'Conectando…', disconnect: 'Desconectar', pulled: 'Save da sua conta carregado.' },
 };
-const CLt = k => (CL[LANG] || CL.en)[k];
+const CLt = k => (k === 'connect' && cloudHost() === 'firebase') ? (LANG === 'pt' ? 'Entrar com Google' : 'Sign in with Google') : (CL[LANG] || CL.en)[k].replace('Claude', acctName()).replace('Sign in to Google to save to your account.', 'Google sign-in didn\'t finish. Try again.').replace('Entre no Google para salvar na conta.', 'O login do Google não terminou. Tente de novo.');
 function cloudJson() { // one document, max 256 KiB: drop the oldest play-log entries if needed
   const m = { ...meta }; let j = JSON.stringify(m);
   while (j.length > 240000 && m.log && m.log.length > 20) { m.log = m.log.slice(Math.floor(m.log.length / 4)); j = JSON.stringify(m); }
@@ -1155,20 +1187,24 @@ async function cloudFlush() {
   if (cloud.state !== 'on' || !cloud.ref || cloud.busy || !cloud.dirty) return;
   cloud.busy = true; cloud.dirty = false;
   try { await cloud.ref.set({ json: cloudJson(), at: meta.savedAt || Date.now() }); }
-  catch (e) { if (e && e.code === 'invalid_argument') cloud.state = 'readonly'; else { cloud.dirty = true; cloud.timer = setTimeout(cloudFlush, 5000); } }
+  catch (e) { if (e && (e.code === 'invalid_argument' || e.code === 'permission-denied')) cloud.state = 'readonly'; else { cloud.dirty = true; cloud.timer = setTimeout(cloudFlush, 5000); } }
   cloud.busy = false;
 }
 // Returns the resulting state: 'on' | 'signedOut' | 'readonly'
-async function cloudConnect() {
+async function cloudConnect(interactive = true) {
   cloud.state = 'working';
   try {
+    let ref;
+    if (cloudHost() === 'firebase') { const r = await fbRef(interactive); if (!r) return (cloud.state = 'signedOut'); ref = r.ref; }
+    else {
     const user = window.claude && window.claude.use ? await window.claude.use('user') : null;
     const id = user ? await user.id() : null;
     if (!id) return (cloud.state = 'signedOut');
     if ((await user.can('data.write')) === false) return (cloud.state = 'readonly');
     const db = await window.claude.use('db');
     if (!db) return (cloud.state = 'signedOut');
-    const ref = db.doc('data/users/' + id + '/save');
+    ref = db.doc('data/users/' + id + '/save');
+    }
     const snap = await ref.get();
     let remote = null; try { const d = snap.exists ? snap.data() : null; remote = d && typeof d.json === 'string' ? JSON.parse(d.json) : null; } catch (e) { remote = null; }
     cloud.ref = ref;
@@ -1183,9 +1219,9 @@ async function cloudConnect() {
     saveMeta(); cloud.dirty = true; await cloudFlush();
     if (cloud.state === 'readonly') meta.cloudOn = false;
     return cloud.state;
-  } catch (e) { return (cloud.state = (e && e.code === 'invalid_argument') ? 'readonly' : 'signedOut'); }
+  } catch (e) { return (cloud.state = (e && (e.code === 'invalid_argument' || e.code === 'permission-denied')) ? 'readonly' : 'signedOut'); }
 }
-function cloudDisconnect() { meta.cloudOn = false; cloud.state = 'off'; cloud.ref = null; saveMeta(); }
+function cloudDisconnect() { meta.cloudOn = false; cloud.state = 'off'; cloud.ref = null; saveMeta(); if (fb.auth) fb.m.signOut(fb.auth).catch(() => {}); }
 function cloudLine() { return cloud.state === 'on' ? CLt('on') : cloud.state === 'working' ? CLt('working') : cloud.state === 'signedOut' ? CLt('signedOut') : cloud.state === 'readonly' ? CLt('readonly') : CLt('off'); }
 /* ---------- save codes: progress you can copy anywhere and paste back ---------- */
 function saveCode() { return 'TT1-' + btoa(unescape(encodeURIComponent(JSON.stringify(meta)))); }
@@ -4366,7 +4402,7 @@ function showProfile() {
     <div class="section">${LANG === 'pt' ? 'Brotinhos brilhantes' : 'Shiny sprouts'}</div>
     <div class="mrow shinyrow">${[0, 1, 2, 3].map(c => { const n = (meta.shinies || {})[c] || 0; return `<span class="mi${n ? ' got' : ''}">${tuftImg(c, 26)} ×${n}</span>`; }).join('')}</div>
     <div class="section">${t('saveH')}</div>
-    <div class="mission" id="saveStatus" style="${cloud.state === 'on' ? '' : storageOK ? '' : 'border-color:var(--coral)'}">${cloud.state === 'on' ? '✓ ' + t('saveCloud') : storageOK ? t('saveLocal') : t('saveBroken')}</div>
+    <div class="mission" id="saveStatus" style="${cloud.state === 'on' ? '' : storageOK ? '' : 'border-color:var(--coral)'}">${cloud.state === 'on' ? '✓ ' + t('saveCloud').replace('Claude', acctName()) : storageOK ? t('saveLocal') : t('saveBroken')}</div>
     ${cloud.state === 'on' ? `<button class="btn ghost small" data-act="clouddisconnect">${CLt('disconnect')}</button>` : cloudBox()}
     <div class="grid2"><button class="btn ghost small" data-act="savecopy">${t('saveCopy')}</button><button class="btn ghost small" data-act="saveload">${t('saveLoad')}</button></div>
     <button class="btn ghost small" data-act="restorebak">${t('restoreBak')}</button><div id="bakMsg" class="bdesc" aria-live="polite">${meta.lastBackup ? t('lastBak', new Date(meta.lastBackup).toLocaleString(LANG === 'pt' ? 'pt-BR' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) : ''}</div>
@@ -4850,6 +4886,7 @@ function skipTutorial() {
 // Only people who can write this artifact's data (the owner; Team members at Contributor) can save to an account.
 // Everyone else never sees a Connect button that can't work: they get the save-code tip instead. can() asks nothing of the viewer.
 async function cloudProbe() {
+  if (cloudHost() === 'firebase') { cloud.can = true; fbLoad().catch(() => { cloud.can = false; const bx = overlay.querySelector('.cloudbox'); if (bx) bx.outerHTML = cloudBox(); }); return; }
   try { const user = window.claude && window.claude.use ? await window.claude.use('user') : null; cloud.can = user ? await user.can('data.write') : false; }
   catch (e) { cloud.can = false; }
   if (cloud.can === false && (mode === 'tutdone' || mode === 'profile')) { const bx = overlay.querySelector('.cloudbox'); if (bx) bx.outerHTML = cloudBox(); }
@@ -4865,7 +4902,7 @@ function showCloudChoice() {
   mode = 'cloudchoice'; const r = cloud.choice; const remote = { ...r };
   show(`<div class="card"><div class="eyebrow">${t('saveH')}</div><h2>${LANG === 'pt' ? 'Qual progresso usar?' : 'Which progress?'}</h2>
     <div class="grid2" style="grid-template-columns:1fr"><button class="btn" data-act="cloudpick" data-k="device">${LANG === 'pt' ? 'Este aparelho' : 'This device'}<small style="display:block;font-size:13px">${saveSummary(meta)}</small></button>
-    <button class="btn ghost" data-act="cloudpick" data-k="account">${LANG === 'pt' ? 'Conta Claude' : 'Claude account'}<small style="display:block;font-size:13px">${saveSummary(remote)}</small></button></div>
+    <button class="btn ghost" data-act="cloudpick" data-k="account">${LANG === 'pt' ? 'Conta ' + acctName() : acctName() + ' account'}<small style="display:block;font-size:13px">${saveSummary(remote)}</small></button></div>
     <p class="small">${LANG === 'pt' ? 'O outro é substituído.' : 'The other one is replaced.'}</p></div>`);
 }
 function showCloudOffer() {
@@ -5680,10 +5717,13 @@ function step(now) {
 demoBoard();
 try { if (meta.tutorialDone) { logEv({ o: 1, c: meta.coins }); saveMeta(); } } catch (e) {}
 idbRestore();
+// Phones keep 1×; tablets and desktop windows scale the interface up to 1.75× so it isn't a tiny phone column in the middle.
+function uiScale() { const z = Math.max(1, Math.min(1.75, Math.round(Math.min(innerWidth / 440, innerHeight / 860) * 20) / 20)); document.documentElement.style.setProperty('--uiz', z); }
+uiScale(); addEventListener('resize', uiScale);
 if ('ResizeObserver' in window) new ResizeObserver(fit).observe(boardEl); else addEventListener('resize', fit);
 document.documentElement.dataset.theme = 'moss'; // menus use the Night forest palette
 setTimeout(cloudProbe, 0);
-if (meta.cloudOn) setTimeout(() => { cloudConnect().then(st => { if (st === 'choose' && (mode === 'hub' || mode === 'splash')) { showCloudChoice(); return; } if (cloud.pulled) { cloud.pulled = false; if (mode === 'hub') showHub(); else if (mode === 'splash') showSplash(); } }); }, 0); // only for players who connected before
+if (meta.cloudOn) setTimeout(() => { cloudConnect(false).then(st => { if (st === 'choose' && (mode === 'hub' || mode === 'splash')) { showCloudChoice(); return; } if (cloud.pulled) { cloud.pulled = false; if (mode === 'hub') showHub(); else if (mode === 'splash') showSplash(); } }); }, 0); // only for players who connected before
 showSplash();
 requestAnimationFrame(frame);
 })();
