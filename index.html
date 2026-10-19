@@ -1143,7 +1143,7 @@ const cloud = { state: 'off', pending: false, ref: null, timer: null, busy: fals
 /* Outside Claude (e.g. the GitHub Pages copy) the same opt-in save runs on Firebase with Google sign-in.
    Fill FB from the Firebase console (Project settings → Your apps → Web). These keys are public by design;
    the Firestore rules are what keep each player's save private (saves/{uid}: only that signed-in uid). */
-const FB = { apiKey: '', authDomain: '', projectId: '', appId: '' };
+const FB = { apiKey: 'AIzaSyDZZoX_cfs_WVgtVjdxzqORLNoapLnTGqw', authDomain: 'sprout-patrol.firebaseapp.com', projectId: 'sprout-patrol', storageBucket: 'sprout-patrol.firebasestorage.app', messagingSenderId: '452658771940', appId: '1:452658771940:web:ff20f16a63719e8e4c79f1' };
 const FB_V = '10.12.2';
 const inClaude = () => !!(window.claude && window.claude.use);
 const cloudHost = () => inClaude() ? 'claude' : FB.apiKey ? 'firebase' : null;
