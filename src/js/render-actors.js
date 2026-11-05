@@ -434,6 +434,13 @@ function obj(name, cx, cy, w, alpha, rot) { // painted in-game object, centered,
 }
 function drawPortal(p) {
   if (p.golden && !p.active) { ctx.globalAlpha = 0.45; drawPortalInner(p); ctx.globalAlpha = 1; return; }
+  const re = homeReact(p); // one swell + glow per delivery, bigger for bigger trails (fx.js)
+  if (re.g > 0) {
+    const cx = (p.x + .5) * cell, cy = (p.y + .5) * cell, col = p.rainbow ? '#ffffff' : p.golden ? '#ffcd4a' : COLORS[p.cs[0]].fill, R = cell * (0.6 + 0.25 * re.g);
+    const gl = ctx.createRadialGradient(cx, cy, 0, cx, cy, R); gl.addColorStop(0, col + 'cc'); gl.addColorStop(1, col + '00');
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = re.g; ctx.fillStyle = gl; circ(ctx, cx, cy, R); ctx.fill(); ctx.restore();
+  }
+  if (re.s !== 1) { const cx = (p.x + .5) * cell, cy = (p.y + .5) * cell; ctx.save(); ctx.translate(cx, cy); ctx.scale(re.s, re.s); ctx.translate(-cx, -cy); drawPortalInner(p); ctx.restore(); return; }
   drawPortalInner(p);
 }
 function drawPortalInner(p) {
@@ -466,7 +473,7 @@ function drawPortalInner(p) {
   const pr = cell * (.14 + (waiting && !reduceMotion ? .03 * (1 + Math.sin(time * 4)) : 0));
   if (p.rainbow) {
     cols.forEach((col, i) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, pr, -spin + i * seg, -spin + (i + 1) * seg); ctx.fill(); });
-    if (p.timer < 3 && Math.floor(time * 4) % 2) strokeRing(cx, cy, cell * .47, '#ffffff', 2);
+    if (p.timer < 3 && (reduceMotion || Math.floor(time * 4) % 2)) strokeRing(cx, cy, cell * .47, '#ffffff', 2);
   } else if (p.golden) {
     if (!obj('ob-gate', cx, cy, cell * 0.9, p.active ? 1 : 0.6)) crownPath(ctx, cx, cy + cell * 0.1, cell * 0.36, p.active ? '#ffcd4a' : '#6b7299', p.active ? '#ff6f61' : '#4a4f70');
   } else {
@@ -480,7 +487,7 @@ function drawPortalInner(p) {
   if (!p.rainbow && !p.golden && meta.cos && meta.cos.portal !== 'none') drawPortalFx(ctx, cx, cy, cell, meta.cos.portal, reduceMotion ? 0 : time, p.x + p.y);
   if (run && run.boss && !p.rainbow && !p.golden) {
     if (p.covered) disc(cx + cell * 0.3, cy - cell * 0.3, cell * 0.08, '#fff1a8');
-    else strokeRing(cx, cy, cell * 0.47, '#fff1a8', 2, 0.3 + 0.3 * Math.sin(time * 3));
+    else strokeRing(cx, cy, cell * 0.47, '#fff1a8', 2, reduceMotion ? 0.45 : 0.3 + 0.3 * Math.sin(time * 3));
   }
 }
 function drawFlake(cx, cy, r) {

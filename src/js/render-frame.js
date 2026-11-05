@@ -2,8 +2,8 @@ function draw() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = '#10152a'; ctx.fillRect(0, 0, viewW, viewH);
   if (!grid) return;
-  let sx = 0, sy = 0;
-  if (shake > 0 && !reduceMotion) { sx = (Math.random() - .5) * 8 * shake; sy = (Math.random() - .5) * 8 * shake; }
+  const fdt = Math.min(0.1, Math.max(0, time - (draw.lastT || time))); draw.lastT = time;
+  const jolt = boardJolt(fdt), sx = jolt.x, sy = jolt.y; // hit kick + short bump wobble; none under reduced motion
   ctx.save();
   ctx.translate(-cam.x + sx, -cam.y + sy);
   if (mazeCanvas) ctx.drawImage(mazeCanvas, 0, 0, COLS * cell, ROWS * cell);
@@ -13,8 +13,11 @@ function draw() {
   drawDen();
 
   for (const k of pickups) {
-    if (k.life < 2.5 && Math.floor(time * 8) % 2) continue;
+    // Expiring: a smooth 2 Hz pulse (scale 1 to 0.85, alpha 1 to 0.5), never an on/off blink; reduced motion: a still dashed ring.
+    const ending = k.life < 2.5, pul = ending && !reduceMotion ? 0.5 - 0.5 * Math.cos(time * TAU * 2) : 0;
     const cx = (k.x + .5) * cell, cy = (k.y + .5) * cell + (reduceMotion ? 0 : Math.sin(time * 2 + k.x) * cell * 0.04);
+    if (ending && reduceMotion) { ctx.save(); ctx.setLineDash([cell * 0.08, cell * 0.07]); strokeRing(cx, cy, cell * 0.4, '#ffffff', Math.max(2, cell * 0.05), 0.9); ctx.restore(); }
+    ctx.save(); ctx.globalAlpha = 1 - 0.5 * pul; ctx.translate(cx, cy); ctx.scale(1 - 0.15 * pul, 1 - 0.15 * pul); ctx.translate(-cx, -cy);
     const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, cell * 0.42);
     const gc = k.type === 'frost' ? '191,232,255' : '255,205,74';
     glow.addColorStop(0, `rgba(${gc},.6)`); glow.addColorStop(0.5, `rgba(${gc},.22)`); glow.addColorStop(1, `rgba(${gc},0)`);
@@ -22,16 +25,18 @@ function draw() {
     ctx.fillStyle = 'rgba(4,7,18,.3)'; ctx.beginPath(); ctx.ellipse(cx, (k.y + .5) * cell + cell * 0.3, cell * 0.16, cell * 0.05, 0, 0, TAU); ctx.fill();
     if (k.type === 'frost') { if (!obj('ob-flake', cx, cy, cell * 0.62, null, reduceMotion ? 0 : Math.sin(time * 1.5 + k.x) * 0.15)) drawFlake(cx, cy, cell * 0.3); }
     else if (!obj('ic-seed', cx, cy, cell * 0.5, null, reduceMotion ? 0 : Math.sin(time * 2.5 + k.x) * 0.12)) drawSeed(cx, cy, cell * 0.28); // same seed coin as the wallet
+    ctx.restore();
   }
   for (const b of bubbles) {
-    const cx = (b.x + .5) * cell, cy = (b.y + .5) * cell + Math.sin(time * 2 + b.bob) * cell * 0.04, col = COLORS[b.c], R = cell * 0.42;
-    drawTuft(ctx, cx, cy, cell * 0.27, b.c, b.bob, time, 0, 0, { glint: true, mood: 'sad' });
+    const bt = reduceMotion ? 0 : time; // bubbles sit still under reduced motion (no bob, no orbit)
+    const cx = (b.x + .5) * cell, cy = (b.y + .5) * cell + Math.sin(bt * 2 + b.bob) * cell * 0.04, col = COLORS[b.c], R = cell * 0.42;
+    drawTuft(ctx, cx, cy, cell * 0.27, b.c, b.bob, bt, 0, 0, { glint: true, mood: 'sad' });
     disc(cx, cy, R, '#cfe6ff', 0.12);
     strokeRing(cx, cy, R, '#d9ecff', Math.max(1.5, cell * 0.04), 0.8);
     ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = Math.max(1.5, cell * 0.05); ctx.lineCap = 'round';
     ctx.beginPath(); ctx.arc(cx, cy, R * 0.75, Math.PI * 1.1, Math.PI * 1.4); ctx.stroke();
     if (b.shiny) drawShinyFx(cx, cy, R, b.shinyT ? b.shinyT / (b.shinyMax || SHINY_T) : null);
-    if (b.gold) for (let k = 0; k < 3; k++) { const a = time * 2 + k * 2.1; disc(cx + Math.cos(a) * R * 1.2, cy + Math.sin(a) * R * 1.2, Math.max(1.5, cell * 0.05), '#fff1a8'); }
+    if (b.gold) for (let k = 0; k < 3; k++) { const a = bt * 2 + k * 2.1; disc(cx + Math.cos(a) * R * 1.2, cy + Math.sin(a) * R * 1.2, Math.max(1.5, cell * 0.05), '#fff1a8'); }
     if (b.locked && obj('ob-cage', cx, cy - R * 0.08, R * 2.35)) { /* painted twig cage */ }
     else if (b.locked) {
       ctx.strokeStyle = '#c9cde6'; ctx.lineWidth = Math.max(1.5, cell * 0.05);
@@ -45,7 +50,6 @@ function draw() {
   const squish = player.moving && !reduceMotion ? Math.sin(Math.min(1, player.p) * Math.PI) : 0;
   const hopOn = false, hp0 = 0, hopH = () => 0, hopSq = () => squish;
   const sqAng = Math.atan2(player.face[1], player.face[0]);
-  const fdt = Math.min(0.1, Math.max(0, time - (draw.lastT || time))); draw.lastT = time;
   const tskin = cosState().trail;
   if (tskin === 'ribbon' && followers.length && followers[0].rx != null) { const pp0 = ppos(); drawRibbon(ctx, [{ x: (pp0.x + .5) * cell, y: (pp0.y + .5) * cell }].concat(followers.filter(f => f.rx != null).map(f => ({ x: (f.rx + .5) * cell, y: (f.ry + .5) * cell }))), cell * 0.2, ch().fill); }
   for (let i = followers.length - 1; i >= 0; i--) {
@@ -63,8 +67,9 @@ function draw() {
   const pp = ppos();
   const pcx = (pp.x + .5) * cell, pcy = (pp.y + .5) * cell;
   drawTutorialHints();
-  const blinkOut = invuln > 0 && mode === 'play' && !reduceMotion && Math.floor(time * 6) % 2;
-  if (blinkOut) ctx.globalAlpha = 0.45;
+  // The hero is never faded (art-feel P3). Invulnerability shows as a dashed white-and-ink ring, from 0.4 s after a hit
+  // (so the hurt pose reads first), blinking 3/s; steady under reduced motion.
+  const invRing = invuln > 0 && mode === 'play' && time - hitAt >= FEEL.heroClearT && (reduceMotion || Math.floor(time * 6) % 2 === 0);
   {
     const c = ch();
     const lift = hopH(0), cy = pcy - lift * cell * 0.2;
@@ -73,8 +78,9 @@ function draw() {
     const hatId = cosState().hat;
     drawHero.phase = hopOn ? hp0 : -1;
     drawHero.mood = run.moodT > time ? run.mood : '';
-    const breathe = 0, shakeX = drawHero.mood === 'hurt' && !reduceMotion ? Math.sin(time * 60) * cell * 0.04 : 0;
-    drawHero(ctx, run.char || meta.char, pcx + shakeX, cy, cell * 0.34, player.face[0], player.face[1], 9, time, hopSq(0) + breathe, sqAng, hatId === 'leaf');
+    const breathe = 0;
+    if (invRing) { ctx.save(); ctx.setLineDash([cell * 0.12, cell * 0.08]); strokeRing(pcx, cy, cell * 0.5, '#1b1530', Math.max(4, cell * 0.11), 0.85); strokeRing(pcx, cy, cell * 0.5, '#ffffff', Math.max(2, cell * 0.05), 0.95); ctx.restore(); }
+    drawHero(ctx, run.char || meta.char, pcx, cy, cell * 0.34, player.face[0], player.face[1], 9, time, hopSq(0) + breathe, sqAng, hatId === 'leaf');
     drawHero.phase = -1; drawHero.mood = '';
     if (hatId !== 'leaf') drawHat(ctx, pcx, cy, cell * 0.34, hatId, reduceMotion ? 0 : time, run.char || meta.char);
     if (shieldUp || run.spareShield) { if (!(shieldBubble(pcx, cy, cell * (0.52 + 0.02 * Math.sin(time * 3))))) strokeRing(pcx, cy, cell * 0.5, '#9fe3d4', Math.max(2, cell * 0.06), 0.9); }
@@ -121,7 +127,7 @@ function draw() {
   for (const e of enemies) if (!(e.denT > 0)) drawGrumble(e);
   if (run.homeTufts && run.homeTufts.length) { // delivered tufts hop happily into their portal and shrink away
     for (let k = run.homeTufts.length - 1; k >= 0; k--) {
-      const h = run.homeTufts[k]; h.t += 1 / 60; if (h.t >= h.dur) { run.homeTufts.splice(k, 1); continue; } if (h.t < 0) continue;
+      const h = run.homeTufts[k]; h.t += fdt; if (h.t >= h.dur) { run.homeTufts.splice(k, 1); homeLand(h); continue; } if (h.t < 0) continue;
       const q = h.t / h.dur, x = lerp(h.x0, h.x1, q), y = lerp(h.y0, h.y1, q) - Math.sin(q * Math.PI) * 0.9;
       drawTuft(ctx, (x + .5) * cell, (y + .5) * cell, cell * 0.28 * (1 - 0.6 * q), h.c, k, time, 0, 0, { mood: 'happy' });
     }

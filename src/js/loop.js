@@ -32,7 +32,7 @@ function frame(now) {
 function step(now) {
   const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
   time += dt;
-  if (mode === 'play') {
+  if (!hitStopTick(dt) && mode === 'play') { // a hit-stop pauses the sim and the garden clock (fx.js)
     const held = tutHeld() || journeyPause;
     if (!held) updatePlayer(dt);
     if (mode === 'play' && !held) { updateEnemies(dt); updateSprouts(dt); updateShiny(dt); if (freezeT <= 0) { updateShots(dt); updateLobs(dt); } }

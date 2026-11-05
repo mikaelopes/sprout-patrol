@@ -44,11 +44,25 @@ function noise({ d = 0.2, v = 0.1, t = 0, f = 1000, f2, q = 1, type = 'bandpass'
   g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
   s.connect(fl).connect(g).connect(dest || SOUT); s.start(t0); s.stop(t0 + d + 0.05);
 }
+const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21]; // C D E G A C… in semitones
 const seqN = (notes, step, fn) => notes.forEach((n, i) => fn(n, i * step));
 // The player's picks from the sound board (option letter in comments).
 const SFX = {
-  free: () => { tone({ f: 600, f2: 1100, d: 0.09, type: 'sine', v: 0.12 }); noise({ d: 0.03, v: 0.05, f: 3000 }); },                  // A soft pop
-  deliver: () => seqN(['C5', 'E5', 'G5', 'C6'], 0.06, (n, t) => tone({ f: n, d: 0.14, type: 'triangle', v: 0.12, t })),            // A happy arpeggio
+  // A soft pop that climbs one pentatonic step per trail slot, so you hear the trail filling; the last slot pops twice, brighter.
+  free: () => {
+    const n = (typeof followers !== 'undefined' && followers.length) || 1, full = typeof cap === 'function' && n >= cap();
+    const r = Math.pow(2, PENTA[Math.min(PENTA.length - 1, n - 1)] / 12);
+    tone({ f: 600 * r, f2: 1100 * r, d: 0.09, type: 'sine', v: 0.12 }); noise({ d: 0.03, v: 0.05, f: 3000 });
+    if (full) tone({ f: 900 * r, f2: 1650 * r, d: 0.08, type: 'triangle', v: 0.09, t: 0.08 });
+  },
+  // A happy arpeggio that grows with the delivery: 1-2 sprouts 3 notes, 3-4 sprouts 4 notes, 5+ 5 notes and a bell.
+  deliver: (count) => {
+    const k = (count || 1) >= 5 ? 5 : (count || 1) >= 3 ? 4 : 3;
+    seqN(['C5', 'E5', 'G5', 'C6', 'E6'].slice(0, k), 0.06, (n, t) => tone({ f: n, d: 0.14, type: 'triangle', v: 0.12, t }));
+    if (k === 5) { tone({ f: 'G6', d: 0.5, type: 'sine', v: 0.05, t: 0.3 }); tone({ f: 'C7', d: 0.4, type: 'sine', v: 0.025, t: 0.3 }); }
+  },
+  night: () => { tone({ f: 'A4', d: 0.22, type: 'triangle', v: 0.1 }); tone({ f: 'F#4', d: 0.32, type: 'triangle', v: 0.1, t: 0.22 }); }, // owl-like falling minor third
+  wilt: () => tone({ f: 520, f2: 260, d: 0.7, type: 'sine', v: 0.07, a: 0.08 }),                                                     // slow downward sigh
   streak: () => seqN(['C5', 'E5', 'G5', 'C6', 'E6'], 0.07, (n, t) => tone({ f: n, d: 0.18, type: 'pulse', v: 0.07, t })),          // A little fanfare
   seed: () => { tone({ f: 900, f2: 700, d: 0.05, type: 'triangle', v: 0.16 }); noise({ d: 0.02, v: 0.04, f: 2500 }); },             // C wood tok
   freeze: () => { // C crystal shimmer: two gliding sine notes with a soft tremble and a faint airy sparkle
@@ -74,11 +88,12 @@ const SFX = {
   fanfare: () => seqN(['G4', 'C5', 'E5', 'G5'], 0.09, (n, t) => tone({ f: n, d: 0.16, type: 'pulse', v: 0.06, t })),
   jackpot: () => seqN(['C5', 'E5', 'G5', 'C6', 'G5', 'C6', 'E6'], 0.09, (n, t) => tone({ f: n, d: 0.14, type: 'pulse', v: 0.06, t })),
 };
-function sfx(kind) {
+/** Play a named sound effect; `arg` is passed to effects that scale (e.g. sfx('home', count)). */
+function sfx(kind, arg) {
   if (!actx || muted) return;
   abus();
   const f = SFX[{ pop: 'free', home: 'deliver', coin: 'seed', shoot: 'shot' }[kind] || kind];
-  if (f) try { f(); } catch (e) {}
+  if (f) try { f(arg); } catch (e) {}
 }
 
 /* ---------- music ----------
