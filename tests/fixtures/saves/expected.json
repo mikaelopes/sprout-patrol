@@ -1,30 +1,30 @@
 {
   "_why": "Hand-computed from the migration tables (v98 cuts, v105 Nest2), not from the game code. coins = start + refunds; refundNote = total refunded.",
   "pre-v98.json": {
-    "coins": 2937, "refundNote": 2837, "cutsV": 2,
+    "coins": 2937, "refundNote": 2837, "cutsV": 3,
     "up": { "heart": 0, "trail": 0, "grip": 0, "speed": 0, "frost": 0, "rainbow": 0, "reroll": 0, "coin": 0 },
     "gear": {}, "gearOn": [], "rep": {},
     "adv": { "1-1": 3, "1-2": 2, "1-8": 3, "2-8": 1 }
   },
   "code-pre-v98.txt": {
-    "coins": 2937, "refundNote": 2837, "cutsV": 2,
+    "coins": 2937, "refundNote": 2837, "cutsV": 3,
     "up": { "heart": 0, "trail": 0, "grip": 0, "speed": 0, "frost": 0, "rainbow": 0, "reroll": 0, "coin": 0 },
     "gear": {}, "gearOn": [], "rep": {},
     "adv": { "1-1": 3, "1-2": 2, "1-8": 3, "2-8": 1 }
   },
   "v104-5garden.json": {
-    "coins": 2055, "refundNote": 2005, "cutsV": 2,
+    "coins": 2055, "refundNote": 2005, "cutsV": 3,
     "up": { "heart": 0, "trail": 0, "grip": 0, "speed": 0, "frost": 0, "rainbow": 0, "reroll": 0, "coin": 0 },
     "gear": {}, "gearOn": [],
     "adv": { "1-1": 3, "1-2": 3, "1-3": 3, "1-4": 2, "1-8": 2, "2-8": 3 }
   },
   "v115.json": {
-    "coins": 1234, "cutsV": 2,
-    "up": { "heart": 2, "trail": 3, "grip": 0, "speed": 2, "frost": 0, "rainbow": 0, "reroll": 0, "coin": 0 },
+    "coins": 1234, "cutsV": 3,
+    "up": { "heart": 2, "trail": 3, "grip": 0, "speed": 1, "frost": 0, "rainbow": 0, "reroll": 0, "coin": 0 },
     "adv": { "1-1": 3, "1-2": 3, "1-3": 2, "1-4": 3, "1-8": 3, "2-1": 3, "2-2": 1, "2-8": 2 }
   },
   "v115-savedRun.json": {
-    "coins": 1234, "cutsV": 2, "savedRun": "kept",
+    "coins": 1234, "cutsV": 3, "savedRun": "kept",
     "adv": { "1-1": 3, "1-2": 3, "1-3": 2, "1-4": 3, "1-8": 3, "2-1": 3, "2-2": 1, "2-8": 2 }
   }
 }

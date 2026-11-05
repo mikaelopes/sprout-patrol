@@ -1019,8 +1019,10 @@ const EVOS = {
 const NEST = [
   { k: 'trail', name: { en: 'Long Burrow', pt: 'Toca Comprida' }, max: 10, cost: [40,  240,  290,  345,  415,  500,  595,  715,  860,  1030], gate: [1,  2,  3,  4,  5,  6,  7,  8,  10,  11],
     desc: lv => lv % 2 === 0 ? { en: '+1 trail space.', pt: '+1 espaço na fila.' } : { en: '+1 line guard: blocks a trail break each garden.', pt: '+1 guarda: bloqueia uma quebra da fila por jardim.' } },
-  { k: 'speed', name: { en: 'Quick Feet', pt: 'Pés Ligeiros' }, max: 10, cost: [200,  240,  290,  345,  415,  500,  595,  715,  860,  1030], gate: [1,  2,  3,  4,  5,  6,  7,  9,  10,  12],
-    desc: lv => ({ en: `Roll faster: ${num(nestSpeedAt(lv),2)} → ${num(nestSpeedAt(lv + 1),2)} tiles/s.`, pt: `Role mais rápido: ${num(nestSpeedAt(lv),2)} → ${num(nestSpeedAt(lv + 1),2)} casas/s.` }) },
+  // P6 (design/revamp/gameplay-levels.md): 5 felt steps; each cost/gate is a pair of the old 10 levels. Old saves: migrateQuick in save.js.
+  { k: 'speed', name: { en: 'Quick Feet', pt: 'Pés Ligeiros' }, max: 5, cost: [440,  635,  915,  1310,  1890], gate: [1,  3,  5,  7,  10],
+    desc: lv => { const a = nestSpeedAt(lv), b = nestSpeedAt(lv + 1), pc = Math.round((b / a - 1) * 100);
+      return { en: `Roll faster: ${num(a,2)} → ${num(b,2)} (+${pc}%)`, pt: `Role mais rápido: ${num(a,2)} → ${num(b,2)} (+${pc}%)` }; } },
   { k: 'heart', name: { en: 'Sturdy Nest', pt: 'Ninho Firme' }, max: 10, cost: [200,  240,  290,  345,  415,  500,  595,  715,  860,  1030], gate: [1,  2,  3,  4,  5,  6,  8,  9,  11,  12],
     desc: lv => nestHearts(lv + 1) > nestHearts(lv) ? { en: '+1 heart in every garden.', pt: '+1 coração em todo jardim.' } : { en: '+0.3 s of safety after a hit.', pt: '+0,3 s de proteção depois de um golpe.' } },
 ]
@@ -1059,7 +1061,7 @@ const CHALLENGES = [
 ];
 let meta = {
   name: 'Sprout Keeper', coins: 0, char: 'pip', owned: { pip: true }, mode: 'normal',
-  up: { heart: 0, trail: 0, grip: 0, speed: 0, frost: 0, rainbow: 0, reroll: 0, coin: 0 }, cutsV: 2,
+  up: { heart: 0, trail: 0, grip: 0, speed: 0, frost: 0, rainbow: 0, reroll: 0, coin: 0 }, cutsV: 3,
   st: { pops: 0, bosses: 0, streaks: 0, runs: 0, tufts: 0, seedsTotal: 0, bestGarden: 0, bestCombo: 0, noHit: 0, rainbow: 0, evos: 0, oneHeartGrove: 0 },
   claimed: {}, adv: {}, discovered: {},
 };
@@ -1108,6 +1110,17 @@ function migrateNest2(m) {
   m.coins = (m.coins || 0) + back; if (back) m.refundNote = (m.refundNote || 0) + back;
   m.cutsV = 2; return m;
 }
+// v3 (P6): Quick Feet went from 10 levels of +0.035 to 5 of +0.07. Level L becomes ceil(L/2), so nobody loses speed;
+// anything paid beyond the new levels' price is refunded. Price tables are frozen here on purpose.
+function migrateQuick(m) {
+  if (!m || m.cutsV >= 3) return m;
+  const sumc = (arr, lv) => arr.slice(0, lv || 0).reduce((a, b) => a + b, 0);
+  const OLD = [200, 240, 290, 345, 415, 500, 595, 715, 860, 1030], NEW = [440, 635, 915, 1310, 1890];
+  m.up = m.up || {}; const L = Math.max(0, Math.min(OLD.length, m.up.speed || 0)), nl = Math.ceil(L / 2);
+  const back = Math.max(0, sumc(OLD, L) - sumc(NEW, nl));
+  m.up.speed = nl; m.coins = (m.coins || 0) + back; if (back) m.refundNote = (m.refundNote || 0) + back;
+  m.cutsV = 3; return m;
+}
 function applySave(saved) {
   const prev = typeof meta === 'object' ? meta : null;
   const base = JSON.parse(META_DEFAULT);
@@ -1117,7 +1130,7 @@ function applySave(saved) {
   // v108 loaded such saves wrongly (old Nest levels, 5-garden groves); spot that shape and migrate it now.
   const u = meta.up || {}, legacy = (u.grip || 0) + (u.reroll || 0) + (u.coin || 0) + (u.rainbow || 0) + (u.frost || 0) > 0 || Object.keys(meta.gear || {}).length > 0;
   if (saved.cutsV == null || legacy) meta.cutsV = 0;
-  mergeSeen(meta, prev); migrateCuts(meta); migrateNest2(meta);
+  mergeSeen(meta, prev); migrateCuts(meta); migrateNest2(meta); migrateQuick(meta);
   if (!CHARS[meta.char] || !meta.owned[meta.char]) meta.char = 'pip';
   if (!MODES[meta.mode]) meta.mode = 'normal';
   if (meta.savedRun && !savedRunOk(meta.savedRun)) delete meta.savedRun; // only the run is dropped, never progress
@@ -1133,7 +1146,7 @@ try { localStorage.setItem('tufttrail-probe', '1'); storageOK = localStorage.get
    so a broken update or a wiped slot can't erase anyone's progress. */
 const SAVE_KEY = 'tufttrail-v2', BAK_KEYS = ['tufttrail-bak-a', 'tufttrail-bak-b', 'tufttrail-bak-c'];
 const sumv = o => Object.values(o || {}).reduce((a, b) => a + (+b || 0), 0);
-const progressOf = m => !m || !m.st ? 0 : (m.st.tufts || 0) + 2 * (m.st.runs || 0) + 15 * sumv(m.adv) + 20 * ['trail', 'speed', 'heart', 'frost'].reduce((a, k) => a + ((m.up && m.up[k]) || 0), 0) + 40 * Object.keys(m.owned || {}).length + 5 * (m.road || 0) + 20 * ['charm', 'thorn'].reduce((a, k) => a + ((m.gear && m.gear[k]) || 0), 0) + (m.tutorialDone ? 5 : 0);
+const progressOf = m => !m || !m.st ? 0 : (m.st.tufts || 0) + 2 * (m.st.runs || 0) + 15 * sumv(m.adv) + 20 * ['trail', 'speed', 'heart', 'frost'].reduce((a, k) => a + ((m.up && m.up[k]) || 0), 0) + (m.cutsV >= 3 ? 20 * ((m.up && m.up.speed) || 0) : 0) + 40 * Object.keys(m.owned || {}).length + 5 * (m.road || 0) + 20 * ['charm', 'thorn'].reduce((a, k) => a + ((m.gear && m.gear[k]) || 0), 0) + (m.tutorialDone ? 5 : 0);
 const store = { best: 0, allowDown: false, lastBak: 0, bakIdx: 0, idbTimer: null, held: false };
 function readSlot(key) { try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v && v.meta ? v.meta : v && v.st ? v : null; } catch (e) { return null; } }
 function pickBest(list) { return list.filter(Boolean).sort((a, b) => (progressOf(b) - progressOf(a)) || ((b.savedAt || 0) - (a.savedAt || 0)))[0] || null; }
@@ -1411,7 +1424,7 @@ function newGarden() {
   if (run.mode === 'swarm') ne = Math.min(10, ne + 2);
   if (run.kind === 'endless' && run.wild && run.wild.greed) ne = Math.min(10, ne + 1);
   if (run.kind === 'endless' && run.node === 'thorny' && !run.boss) ne = Math.min(10, ne + 1);
-  const k = ne - 1;
+  const k = ne - 1 - (AS && AS.mapNe != null ? AS.ne - AS.mapNe : 0); // boss maps: sized by mapNe, not by the guard count
   COLS = Math.min(19, 11 + 2 * Math.floor(k * 0.75));
   ROWS = Math.min(25, 15 + 2 * k);
   START = { x: ((COLS - 1) / 2) | 1, y: ((ROWS - 1) / 2) | 1 };
@@ -1497,8 +1510,7 @@ function newGarden() {
       shootT: 3 + Math.random() * 2, speed: espeed * (type === 'hunter' ? 0.92 : 1) });
   });
   if (run.boss) {
-    if (enemies.length > 1) enemies.pop();
-    if (run.bossType === 'twins' && enemies.length > 1) enemies.pop();
+    enemies.length = bossTrim(enemies.length, run.bossType === 'twins');
     run.cages.forEach(cg => {
       const near = freeTiles(t2 => Math.abs(t2.x - cg.x) + Math.abs(t2.y - cg.y) <= 3 && Math.abs(t2.x - START.x) + Math.abs(t2.y - START.y) >= 5);
       const bt = near[rnd(near.length)] || cg;
@@ -1565,18 +1577,18 @@ const BAL = {
   neAdd:  { a: 0, b: 1, c: 1 },          // extra pests
   speed:  { a: 1.3, b: 1.5, c: 1.3 },    // pest speed multiplier
   hard:   { count: 0.45, ne: 3, speed: 1.4, hp: -1 }, // hard garden: short and sharp, one heart less
-  boss:   { speed: 0.92, ne: 5 },        // bigger boss maps, slightly slower guards
+  boss:   { speed: 0.92, ne: 5, mapStep: 1, crowd: 1 }, // slightly slower guards; map = the grove's garden-7 map + mapStep pests' worth, guards ≤ that + crowd (design/revamp/gameplay-levels.md P2.3)
   // per-grove pest speed multipliers for normal, hard and boss gardens (auto-tuned, index = grove - 1)
-  gs: { n: [1.15, 1.15, 1.15, 1.678, 1.475, 1.069, 0.987, 1.15, 0.987, 1.475, 1.028, 1.069], h: [1, 1, 1.5, 1.65, 0.9, 1.5, 1.15, 0.825, 1.719, 1.6, 0.947, 1.759], b: [1.719, 1.719, 0.642, 0.987, 0.987, 0.825, 0.947, 0.703, 0.541, 1.069, 0.581, 0.744] },
-  hne: [0,0,1,2,2,1,0,0,0,3,0,0],          // extra pests in each grove's hard garden
+  gs: { n: [1.15, 1.15, 1.15, 1.678, 1.475, 1.069, 0.987, 1.15, 0.987, 1.475, 1.028, 1.069], h: [1, 1, 1.6, 1.65, 0.9, 1.5, 1.15, 0.825, 1.719, 1.6, 0.947, 1.759], b: [1.55, 1.6, 0.642, 0.987, 0.987, 1.15, 0.947, 0.703, 0.541, 1.069, 0.581, 0.744] },
+  hne: [0,0,0,2,2,1,0,0,0,3,0,0],          // extra pests in each grove's hard garden (3-6 is the first one: a teaser, P2.4)
   gm: [1.469, 1.075, 1.075, 1.338, 1.075, 1.469, 0.813, 1.075, 1.075, 1.469, 1.075, 0.944, 1.075, 0.583, 1.075, 0.944, 1.075, 1.338, 1.075, 1.075, 1.075, 1.075, 1.075, 0.583, 0.616, 1.075, 1.075, 1.075, 1.075, 1.075, 1.075, 0.681, 1.534, 1.075, 1.075, 0.681, 1.567, 0.878, 1.075, 1.338, 0.944, 0.681, 1.338, 0.681, 1.075, 1.075, 0.878, 0.747, 1.009, 1.075, 0.681, 0.813, 1.206, 1.338, 0.944, 0.55, 1.075, 1.075, 0.813, 0.681, 0.747, 1.075, 0.616, 1.075, 1.338, 1.075, 1.338, 1.075, 1.009, 1.075, 1.075, 1.338, 1.075, 0.681, 1.075, 1.075, 1.075, 1.075, 0.583, 0.878, 0.813, 0.813, 1.075, 0.714, 0.681, 1.567, 1.075, 1.534, 1.534, 1.338, 1.075, 1.075, 1.075, 1.075, 1.075, 1.239],                 // per-garden fine tune of pest speed, index (grove-1)*5 + garden-1
-  ghp: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, -1, -1, 0, -2, 0, 0, 0, -1, 0, 0, 0, -1, -2, 0, 0, 0, 0, -2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 3, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, -1, 0, 0, -3, 0, 0, -3, 0, 0, 0, -1, -2, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0, 0, -3, -1, -3, 0, 0],                // per-garden heart adjustment
+  ghp: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, -2, 0, 0, 0, -1, 0, 0, 0, -1, -2, 0, 0, 0, 0, -2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 3, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, -1, 0, 0, -3, 0, 0, -3, 0, 0, 0, -1, -2, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0, 0, -3, -1, -3, 0, 0],                // per-garden heart adjustment
   rosterAdd: { a: 0, b: 1, c: 2 },     // extra special pests (instead of wanderers) once a grove's new pest has been met
   speedCap: 3.25,                         // pests never outrun a hero at the Nest goal
   twinsNe: 1,                            // the Twins already bring 2 bosses
   // economy: seeds paid per garden (tuned with full-season campaign simulations)
   eco: { first: 3, star: 6, starPay2: 0.15, starPay3: 0.3, starPayHard: 0.15, heroRate: 0.3, heroCap: 1, clearBase: 2, clearG: 1, chestBase: 20, chestStep: 8 },
-  nestSpeed: 0.035,                      // hero speed per Pés Ligeiros level (skill should decide ~70% of a win)
+  nestSpeed: 0.07,                       // hero speed per Pés Ligeiros level, 5 levels (P6: same +0.35 total as the old 10 × 0.035)
   heroAdd: 0.55,                         // added to every hero's base speed
 };
 const balBand = G => G <= 3 ? 'a' : G <= 8 ? 'b' : 'c';
@@ -1587,9 +1599,13 @@ function advSpec(G, i) {
   const ne = Math.min(6, 1 + Math.floor((G - 1) * 0.5) + saw) - (boss ? 1 : 0);
   const gi = Math.max(0, Math.min(11, G - 1)), gm = (boss ? BAL.gs.b[gi] : hard ? BAL.gs.h[gi] : BAL.gs.n[gi]) * (BAL.gm[gi * ADV_N + i - 1] || 1);
   const sp = Math.min(BAL.speedCap, Math.min(2.9, (1.5 + 0.06 * G + 0.035 * ii) * (G <= 2 ? 0.78 : G <= 4 ? 0.88 : 1)) * BAL.speed[bd] * (hard ? BAL.hard.speed : 1) * (boss ? BAL.boss.speed : 1) * gm);
+  const ne0 = Math.min(8, Math.max(boss ? 0 : 1, ne) + BAL.neAdd[bd] + (hard ? BAL.hard.ne + BAL.hne[Math.max(0, Math.min(11, G - 1))] : 0) + (boss ? (BOSS_ORDER[(G - 1) % BOSS_ORDER.length] === 'twins' ? BAL.twinsNe : BAL.boss.ne) : 0));
+  // Boss maps follow the grove: sized like garden 7 plus one step, and the guards can't crowd it (P2.3).
+  const mapNe = boss ? Math.min(ne0, advSpec(G, BOSS_I - 1).ne + BAL.boss.mapStep) : ne0;
   return {
     hard,
-    ne: Math.min(8, Math.max(boss ? 0 : 1, ne) + BAL.neAdd[bd] + (hard ? BAL.hard.ne + BAL.hne[Math.max(0, Math.min(11, G - 1))] : 0) + (boss ? (BOSS_ORDER[(G - 1) % BOSS_ORDER.length] === 'twins' ? BAL.twinsNe : BAL.boss.ne) : 0)),
+    ne: boss ? Math.min(ne0, mapNe + BAL.boss.crowd) : ne0,
+    mapNe,
     colors: G === 1 ? (ii <= 2 ? 2 : 3) : G <= 3 ? 3 : 4,
     count: Math.max(5, Math.min(26, Math.round((Math.min(20, 5 + Math.floor(G * 1.2) + ii) + BAL.countAdd[bd]) * BAL.count[bd] * (hard ? BAL.hard.count : 1)))),
     shooters: G < 2 ? 0 : Math.min(G >= 10 ? 3 : 2, Math.floor(G / 3) + (ii >= 3 ? 1 : 0)),
@@ -1614,6 +1630,17 @@ function advRoster(G, i, ne, oldSpecials) {
   while (types.length < ne) types.push('wander');
   return types.slice(0, ne);
 }
+// Boss gardens swap the last guard (two for the Twins) for the boss itself: how many normal pests stay.
+const bossTrim = (n, twins) => n > 1 ? (twins && n > 2 ? n - 2 : n - 1) : n;
+// Exactly the pests newGarden() puts on an Adventure board (P1: the map and prelevel read this, never a copy).
+function advFoeTypes(G, i) {
+  const sp = advSpec(G, i), types = advRoster(G, i, sp.ne, sp.shooters + sp.hunters).slice(0, sp.ne);
+  while (types.length < sp.ne) types.push('wander');
+  if (isBossI(i)) { const tw = BOSS_ORDER[(G - 1) % BOSS_ORDER.length] === 'twins'; types.length = bossTrim(types.length, tw); types.push(...Array(tw ? 2 : 1).fill('boss')); }
+  return types;
+}
+// Hearts a garden adds or takes on top of the grove bonus (hard garden + per-garden tune). Shown on the prelevel (P1).
+const advHpAdj = (G, i) => (isHardI(G, i) ? BAL.hard.hp : 0) + (BAL.ghp[Math.max(0, Math.min(BAL.ghp.length - 1, (G - 1) * ADV_N + i - 1))] || 0);
 // First appearance of each thing in the season (for the "New!" strip before a garden)
 function advFirsts(G, i) {
   const out = [], fresh = Object.keys(PEST_INTRO).find(k => PEST_INTRO[k] === G);
@@ -5071,7 +5098,7 @@ function showPrelevel(g, i) {
   }).join('');
   const sel = BOOSTS.filter(b => pre.sel[b.k]).map(b => L(b.desc)).join(' · ');
   const bt = BOSS_ORDER[(g - 1) % BOSS_ORDER.length];
-  const a = advAllow(g), bh = advBonusHp(g);
+  const a = advAllow(g), bh = advBonusHp(g) + advHpAdj(g, i); // net heart change, same sum maxHp() uses
   const dots = [0, 1, 2, 3].slice(0, sp.colors).map(c => `<span class="cdot" style="background:${COLORS[c].fill}"></span>`).join('');
   const goal = isBossI(i)
     ? `<span class="mi">${svg('key', '#fff1a8')} ${sp.colors >= 4 && sp.dual ? '3–4' : sp.colors}</span><span class="mi">→</span><span class="mi">${svg('crown', '#ffcd4a')}</span><span class="mi">${svg('tuft', '#fff1a8')} → ${svg('crown', '#ffcd4a')}</span>`
@@ -5084,7 +5111,7 @@ function showPrelevel(g, i) {
     <div class="mrow">${goal}</div>
     ${newRow(g, i)}
     ${recRow(g)}
-    <div class="mrow">${starChips(g)}${advPar(g, i, sp.count) ? `<span class="mi">${svg('clock', '#bfe8ff')} ${mmss(advPar(g, i, sp.count))}</span>` : ''}${bh ? `<span class="mi">${svg('heart', '#ff6f61')} +${bh}</span>` : ''}${meta.advBest && meta.advBest[advId(g, i)] ? `<span class="mi">${t('bestL')} ${fmt(meta.advBest[advId(g, i)])}</span>` : ''}</div>
+    <div class="mrow">${starChips(g)}${advPar(g, i, sp.count) ? `<span class="mi">${svg('clock', '#bfe8ff')} ${mmss(advPar(g, i, sp.count))}</span>` : ''}${bh ? `<span class="mi"${bh < 0 ? ' style="color:var(--coral)"' : ''}>${svg('heart', '#ff6f61')} ${bh > 0 ? '+' : '−'}${Math.abs(bh)}</span>` : ''}${meta.advBest && meta.advBest[advId(g, i)] ? `<span class="mi">${t('bestL')} ${fmt(meta.advBest[advId(g, i)])}</span>` : ''}</div>
     <div class="hubtop"><div class="section" style="margin:0">${t('boostTitle')}</div><div class="wallet" style="font-size:17px">${SEED}${fmt(meta.coins - cost)}</div></div>
     <div class="grid2">${items}</div>
     <div class="bdesc">${sel}</div>
@@ -5122,8 +5149,7 @@ function startAdventure(g, i, boost) {
   boost = boost || {}; run.boosts = { ...boost };
   if (boost.heart) run.bonusHp = 1;
   if (boost.bubble) run.spareShield = true;
-  if (isHardI(g, i)) run.bonusHp = (run.bonusHp || 0) + BAL.hard.hp;
-  run.bonusHp = (run.bonusHp || 0) + (BAL.ghp[Math.max(0, Math.min(BAL.ghp.length - 1, (g - 1) * ADV_N + i - 1))] || 0);
+  run.bonusHp = (run.bonusHp || 0) + advHpAdj(g, i);
   run.hp = maxHp();
   beginGarden();
 }
@@ -5212,17 +5238,6 @@ function advResult(won, quit) {
       <button class="btn ghost small" data-act="map">${t('mapBtn')}</button>
     </div></div>`);
 }
-// What a level will throw at you, mirrored from newGarden() so the map can preview it.
-function advFoes(G, i) {
-  const sp = advSpec(G, i), ne = sp.ne, types = [];
-  for (let k = 0; k < sp.shooters; k++) types.push('shooter');
-  for (let k = 0; k < sp.hunters; k++) types.push('hunter');
-  const add = { mushroom: G >= 11 ? 2 : G >= 6 ? 1 : 0, sniper: G >= 12 ? 2 : G >= 8 ? 1 : 0, grape: G >= 13 ? 2 : G >= 10 ? 1 : 0 };
-  for (const [k, n] of Object.entries(add)) for (let j = 0; j < n && types.length < ne - (ne >= 3 ? 1 : 0); j++) types.push(k);
-  while (types.length < ne) types.push('wander');
-  const out = {}; types.slice(0, ne).forEach(k => out[k] = (out[k] || 0) + 1);
-  return { sp, foes: out };
-}
 // Map pictures show the pest with its face: rendered once to a small canvas, cached as a data URL.
 const PEST_PIC = {};
 function pestFaceSrc(type) {
@@ -5237,7 +5252,7 @@ function pestFaceSrc(type) {
 const pestPic = (type, size, cls) => { const P = PEST[type], src = P && (pestFaceSrc(type) || artGet(P.body)); return src ? `<img class="${cls || 'ppic'}" data-pest="${type}" src="${src}" alt="" style="width:${size}px;height:${size}px">` : ''; };
 function mapPreview(g, i) {
   if (isBossI(i)) return '';
-  const { sp, foes } = advFoes(g, i);
+  const sp = advSpec(g, i), foes = {}; advFoeTypes(g, i).forEach(k => foes[k] = (foes[k] || 0) + 1);
   const pests = Object.entries(foes).map(([k, n]) => `<span class="pv">${pestPic(k, 20)}${n > 1 ? `<b>${n}</b>` : ''}</span>`).join('');
   return `<div class="mprev"><span class="pv">${svg('tuft', '#6fe08a')}<b>${sp.count}</b></span>${pests}</div>`;
 }

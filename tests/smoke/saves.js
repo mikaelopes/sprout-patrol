@@ -1,4 +1,5 @@
 // Golden saves: every fixture in tests/fixtures/saves/ must load with no lost progress, through the real boot path (localStorage)
+const CUTS_V = 3; // latest migration level: 2 = Nest v2 refunds, 3 = Quick Feet in 5 steps (old level L -> ceil(L/2))
 // and through applySave / readCode. Also pins the storage key and the savedRun guard. Exit 1 on any mismatch.
 const { chromium } = require('playwright'); const { pathToFileURL } = require('url'); const fs = require('fs'), path = require('path'); const { spawnSync } = require('child_process');
 const FX = path.join(__dirname, '..', 'fixtures', 'saves'), PAGE = path.join(__dirname, '..', 'sim', 'game_saves.html');
@@ -10,7 +11,7 @@ const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const sum = o => Object.values(o || {}).reduce((a, b) => a + (+b || 0), 0);
 // Upgrades and gear are refunded as seeds by design (expected.json pins the amounts); stars, stats, heroes and flags must never go down.
 function invariants(label, src, got, T) {
-  check(label + ' cutsV', got.cutsV === 2, got.cutsV);
+  check(label + ' cutsV', got.cutsV === CUTS_V, got.cutsV);
   check(label + ' char valid', !!T.chars[got.char] && !!got.owned[got.char], got.char);
   check(label + ' mode valid', got.mode === 'normal' || !!T.modes[got.mode], got.mode);
   check(label + ' stars kept', sum(got.adv) === sum(src.adv), sum(got.adv) + ' vs ' + sum(src.adv));
@@ -50,7 +51,7 @@ function expected(label, name, got) {
       'garden not a number': { ...good.savedRun, run: { ...good.savedRun.run, garden: 'x' } }, 'not an object': 'junk', 'wrong kind': { ...good.savedRun, run: { ...good.savedRun.run, kind: 'adv' } } };
     for (const [label, sr] of Object.entries(variants)) {
       const m = await p.evaluate(o => window.__g.load(o), { ...good, savedRun: sr });
-      check('savedRun ' + label + ' dropped', m.savedRun === undefined); check('savedRun ' + label + ' keeps progress', eq(m.adv, good.adv) && m.coins === good.coins && m.cutsV === 2);
+      check('savedRun ' + label + ' dropped', m.savedRun === undefined); check('savedRun ' + label + ' keeps progress', eq(m.adv, good.adv) && m.coins === good.coins && m.cutsV === CUTS_V);
     }
     const ok = await p.evaluate(o => window.__g.load(o), good); check('savedRun current version kept', !!ok.savedRun && ok.savedRun.v === i.runV);
     await ctx.close(); }
