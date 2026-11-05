@@ -15,6 +15,7 @@ node tests/sim/mkpage.js tests/sim/game_counter.html
 node tests/sim/counter.js tests/sim/game_counter.html "$TMP/counter.json" | tail -2
 node tests/smoke/saves.js
 node tests/smoke/nest-migration.js
+node tests/smoke/flash.js dist/sprout-patrol.html
 node tests/smoke/cloudtest.js
 node tests/smoke/fbtest.js
 echo "GATE GREEN"

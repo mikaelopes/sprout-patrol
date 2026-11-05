@@ -1821,7 +1821,7 @@ function deliver(pt) {
     for (let a = 0; a < 26; a++) { const ang = a / 26 * TAU; particles.push({ x: pt.x, y: pt.y, vx: Math.cos(ang) * 6, vy: Math.sin(ang) * 6, life: .8, max: .8, color: a % 2 ? '#ffd970' : '#ffffff' }); }
     saveMeta();
   }
-  followers.forEach((f, i) => { if (ok(f.c)) { if (run.gotC) run.gotC[f.c] = (run.gotC[f.c] || 0) + 1; const p = fpos(i); burst(p.x, p.y, COLORS[f.c].fill, 6); (run.homeTufts = run.homeTufts || []).push({ x0: p.x, y0: p.y, x1: pt.x, y1: pt.y, c: f.c, t: -0.08 * hopIdx++, dur: 0.55 }); } });
+  followers.forEach((f, i) => { if (ok(f.c)) { if (run.gotC) run.gotC[f.c] = (run.gotC[f.c] || 0) + 1; const p = fpos(i); burst(p.x, p.y, COLORS[f.c].fill, 6); (run.homeTufts = run.homeTufts || []).push({ x0: p.x, y0: p.y, x1: pt.x, y1: pt.y, c: f.c, t: -0.08 * hopIdx, dur: 0.55, n: count, first: !hopIdx++ }); } });
   followers = followers.filter(f => !ok(f.c));
   if (trail.length > followers.length + 1) trail.length = followers.length + 1;
   if (run.boss && !pt.golden) { const br = enemies.find(o => o.type === 'boss' && o.variant === 'broc'); if (br && br.hurtT <= 0) bonkBoss(br); }
@@ -1853,14 +1853,13 @@ function deliver(pt) {
   const base = Math.round(count * coinMult());
   const extra = Math.round(bonus * coinMult());
   run.coins += base + extra;
-  floatText(pt.x, pt.y, t('seeds', base), pt.rainbow ? '#ffffff' : COLORS[pt.cs[0]].fill);
+  floatText(pt.x, pt.y, t('seeds', base + extra) + (extra ? t('inRow', top) : ''), extra ? '#ffcd4a' : pt.rainbow ? '#ffffff' : COLORS[pt.cs[0]].fill); // one seed line (art-feel P2)
   if (extra) {
-    floatText(pt.x, pt.y - 0.7, t('streak', top, extra), '#ffcd4a');
     const pc = { x: pt.x, y: pt.y };
     for (let a = 0; a < 20; a++) { const ang = a / 20 * Math.PI * 2; particles.push({ x: pc.x, y: pc.y, vx: Math.cos(ang) * 5, vy: Math.sin(ang) * 5, life: .6, max: .6, color: '#ffcd4a' }); }
     sfx('streak');
   }
-  sfx('home');
+  deliverFeel(pt, count); // sound + home reaction scaled by the trail (fx.js)
   if (evo.comet) cometT = 4;
   if (run.kind === 'endless') {
     run.xp += count;
@@ -2091,7 +2090,7 @@ function drawBeamFx(fx) {
   const a = fx.life / fx.max, k = 1 - a, x0 = (fx.x0 + .5) * cell, y0 = (fx.y0 + .5) * cell, x1 = (fx.x1 + .5) * cell, y1 = (fx.y1 + .5) * cell;
   const len = Math.hypot(x1 - x0, y1 - y0), ang = Math.atan2(y1 - y0, x1 - x0);
   if (fx.bolt) {
-    const im = spr('fx-bolt'), flick = Math.floor(time * 16) % 2;
+    const im = spr('fx-bolt'), flick = reduceMotion ? 0 : Math.floor(time * 6) % 2; // <= 3 flips/s
     ctx.save(); ctx.globalAlpha = Math.min(1, a * 1.6); ctx.translate(x0, y0); ctx.rotate(ang); if (flick) ctx.scale(1, -1);
     ctx.drawImage(im, 0, -cell * 0.45, Math.max(cell, len), cell * 0.9); ctx.restore();
     fxPic(ctx, 'fx-twinkle', x1, y1, cell * (0.6 + 0.5 * k), time * 3, a);
@@ -2289,7 +2288,7 @@ function updateDirector(dt) {
   run.gt += dt;
   if (Math.floor(run.gt) !== before) updateHud();
   const pressure = run.kind === 'endless' || (run.adv && run.adv.g >= 8 && !(run.adv.g === 8 && run.adv.i < 3) && !run.daily); // night starts at 8-3, after the Hail Cloud has had 8-1 and 8-2 to itself
-  if (pressure && !run.wiltMsg && run.gt > 90) { run.wiltMsg = true; banner(t('wilting'), '#ff9a5c', 'clock'); sfx('hurt'); }
+  if (pressure && !run.wiltMsg && run.gt > 90) { run.wiltMsg = true; banner(t('wilting'), '#ff9a5c', 'clock'); sfx('wilt'); }
   if (pressure && !run.nightOn && run.gt > 180) {
     run.nightOn = true;
     const pp = ppos();
@@ -2301,7 +2300,7 @@ function updateDirector(dt) {
       enemies.push(ne2);
     }
     banner(t('nightFalls'), '#6a4be0', 'ghost');
-    sfx('hurt');
+    sfx('night');
   }
 }
 function hurt() {
@@ -2320,9 +2319,7 @@ function hurt() {
   run.hitThisGarden = true;
   run.hits++;
   invuln = ghostT();
-  shake = 0.35;
-  burst(p.x, p.y, '#ff6f61', 14);
-  sfx('hurt');
+  hitFeel(p); // hit-stop, kick, burst and the damage buzz (fx.js)
   updateHud();
   if (run.hp <= 0) { gameOver(); return; }
   const drop = Math.ceil(followers.length * Math.max(0.2, 0.4 - 0.067 * (meta.up.grip || 0)));
@@ -2652,11 +2649,13 @@ function banner(text, color, icon, prio) {
   banners.push(nb); if (banners.length > 3) banners.splice(1, banners.length - 3);
 }
 function updateFx(dt) {
+  const damp = Math.pow(0.9, dt * 60); // same slow-down per second at 30, 60 or 120 fps
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
-    p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.9; p.vy *= 0.9; p.life -= dt;
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= damp; p.vy *= damp; p.life -= dt;
     if (p.life <= 0) particles.splice(i, 1);
   }
+  if (particles.length > 260) particles.splice(0, particles.length - 260);
   if (banners.length) { banners[0].t += dt; if (banners[0].t >= banners[0].dur) banners.shift(); }
   for (let i = floats.length - 1; i >= 0; i--) {
     floats[i].y -= dt * 0.9; floats[i].life -= dt;
@@ -2665,6 +2664,66 @@ function updateFx(dt) {
   shake = Math.max(0, shake - dt);
 }
 
+/* ---------- hit feel (art-feel P3) ----------
+   A hit freezes the garden for a beat (hit-stop: rendering goes on, the sim and the garden clock wait),
+   kicks the board a few px away from what hit you and eases back. The hero is never faded. */
+const FEEL = { hitStop: 0.07, kickPx: 4, kickDur: 0.2, heroClearT: 0.4 };
+let hitStop = 0, hitAt = -9, kick = { x: 0, y: 0, t: 9 };
+/** Called once per frame by step(). Returns true while the hit-stop holds the simulation. */
+function hitStopTick(dt) { if (hitStop <= 0) return false; hitStop -= dt; return true; }
+/** Feedback for a real hit at tile position p (hearts lost). Sound, burst, hit-stop and kick. */
+function hitFeel(p) {
+  hitAt = time;
+  burst(p.x, p.y, '#ff6f61', 10);
+  sfx('hurt');
+  if (reduceMotion) return;
+  hitStop = FEEL.hitStop;
+  let src = null, best = 1.6; // nearest thing that could have hit us; else the way we were rolling
+  for (const e of enemies) { const q = epos(e), d = Math.hypot(q.x - p.x, q.y - p.y); if (d < best) { best = d; src = q; } }
+  for (const s of shots) { const d = Math.hypot(s.x - p.x, s.y - p.y); if (d < best) { best = d; src = s; } }
+  let dx = src ? p.x - src.x : -player.face[0], dy = src ? p.y - src.y : -player.face[1];
+  const L = Math.hypot(dx, dy) || 1; kick = { x: dx / L, y: dy / L, t: 0 };
+}
+/** Board offset in css px for this frame: the hit kick (eased back) plus a smooth, short wobble for bumps. */
+const JOLT = { x: 0, y: 0 }, REACT = { s: 1, g: 0 }; // reused every frame
+function boardJolt(dt) {
+  let x = 0, y = 0; JOLT.x = 0; JOLT.y = 0;
+  if (reduceMotion) return JOLT;
+  if (kick.t < FEEL.kickDur) { kick.t += dt; const k = Math.max(0, 1 - kick.t / FEEL.kickDur), e = k * k; x += kick.x * FEEL.kickPx * e; y += kick.y * FEEL.kickPx * e; }
+  if (shake > 0) { x += Math.sin(time * 38) * 6 * shake; y += Math.cos(time * 29) * 4 * shake; } // ~6 Hz, gone in <0.4 s: at most 2 wiggles
+  JOLT.x = x; JOLT.y = y; return JOLT;
+}
+
+/* ---------- delivery payoff (art-feel P2) ----------
+   Feedback grows with the number of sprouts delivered at once: the arpeggio gets longer, sparkles land with
+   each sprout from 3 up, a ring of stars from 5 up, and the home swells once and glows in its colour.
+   One envelope per delivery (not per sprout), so nothing pulses faster than the 3/s flash rule. */
+const DELIVER_TIER = n => n >= 5 ? 3 : n >= 3 ? 2 : 1;
+/** Start the home's reaction and the delivery sound for `count` sprouts reaching portal pt. */
+function deliverFeel(pt, count) {
+  if (!count) return;
+  const tier = DELIVER_TIER(count);
+  sfx('home', count);
+  const last = 0.08 * (count - 1) + 0.55; // when the last hopping sprout lands (matches the homeTufts timing)
+  pt.feel = { t0: time + 0.55, t1: time + last, amp: [0, 0.08, 0.12, 0.15][tier], tier };
+  if (tier >= 3) { // a ring of particles in the home's colour, sized by the trail
+    const col = pt.rainbow ? '#ffffff' : COLORS[pt.cs[0]].fill, n = Math.min(36, 5 * count);
+    for (let a = 0; a < n; a++) { const ang = a / n * TAU; particles.push({ x: pt.x, y: pt.y, vx: Math.cos(ang) * 4.5, vy: Math.sin(ang) * 4.5, life: .7, max: .7, color: a % 2 ? col : '#fff1a8' }); }
+  }
+}
+/** A delivered sprout reached its home (called by the hop animation). */
+function homeLand(h) {
+  const tier = DELIVER_TIER(h.n || 1);
+  if (tier >= 2) spriteFx('fx-sparkle', h.x1 + (Math.random() - .5) * 0.5, h.y1 - 0.15 - Math.random() * 0.3, 0.5, 0.3, 0.7, 2);
+  if (tier >= 3 && h.first) for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; spriteFx('fx-star', h.x1 + Math.cos(a) * 0.75, h.y1 + Math.sin(a) * 0.75, 0.7, 0.25, 0.55, 3); }
+}
+/** Home swell (scale) and glow (0..1) for portal p right now. */
+function homeReact(p) {
+  const f = p.feel; REACT.s = 1; REACT.g = 0; if (!f || time < f.t0) return REACT;
+  const rel = 0.3, end = f.t1 + rel; if (time > end) { p.feel = null; return REACT; }
+  const up = Math.min(1, (time - f.t0) / 0.08), down = time > f.t1 ? 1 - (time - f.t1) / rel : 1, env = up * down;
+  REACT.s = reduceMotion ? 1 : 1 + f.amp * env; REACT.g = env * (0.35 + 0.15 * f.tier); return REACT;
+}
 /* ---------- sound ---------- */
 let actx = null, muted = false;
 function initAudio() {
@@ -2711,11 +2770,25 @@ function noise({ d = 0.2, v = 0.1, t = 0, f = 1000, f2, q = 1, type = 'bandpass'
   g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
   s.connect(fl).connect(g).connect(dest || SOUT); s.start(t0); s.stop(t0 + d + 0.05);
 }
+const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21]; // C D E G A C… in semitones
 const seqN = (notes, step, fn) => notes.forEach((n, i) => fn(n, i * step));
 // The player's picks from the sound board (option letter in comments).
 const SFX = {
-  free: () => { tone({ f: 600, f2: 1100, d: 0.09, type: 'sine', v: 0.12 }); noise({ d: 0.03, v: 0.05, f: 3000 }); },                  // A soft pop
-  deliver: () => seqN(['C5', 'E5', 'G5', 'C6'], 0.06, (n, t) => tone({ f: n, d: 0.14, type: 'triangle', v: 0.12, t })),            // A happy arpeggio
+  // A soft pop that climbs one pentatonic step per trail slot, so you hear the trail filling; the last slot pops twice, brighter.
+  free: () => {
+    const n = (typeof followers !== 'undefined' && followers.length) || 1, full = typeof cap === 'function' && n >= cap();
+    const r = Math.pow(2, PENTA[Math.min(PENTA.length - 1, n - 1)] / 12);
+    tone({ f: 600 * r, f2: 1100 * r, d: 0.09, type: 'sine', v: 0.12 }); noise({ d: 0.03, v: 0.05, f: 3000 });
+    if (full) tone({ f: 900 * r, f2: 1650 * r, d: 0.08, type: 'triangle', v: 0.09, t: 0.08 });
+  },
+  // A happy arpeggio that grows with the delivery: 1-2 sprouts 3 notes, 3-4 sprouts 4 notes, 5+ 5 notes and a bell.
+  deliver: (count) => {
+    const k = (count || 1) >= 5 ? 5 : (count || 1) >= 3 ? 4 : 3;
+    seqN(['C5', 'E5', 'G5', 'C6', 'E6'].slice(0, k), 0.06, (n, t) => tone({ f: n, d: 0.14, type: 'triangle', v: 0.12, t }));
+    if (k === 5) { tone({ f: 'G6', d: 0.5, type: 'sine', v: 0.05, t: 0.3 }); tone({ f: 'C7', d: 0.4, type: 'sine', v: 0.025, t: 0.3 }); }
+  },
+  night: () => { tone({ f: 'A4', d: 0.22, type: 'triangle', v: 0.1 }); tone({ f: 'F#4', d: 0.32, type: 'triangle', v: 0.1, t: 0.22 }); }, // owl-like falling minor third
+  wilt: () => tone({ f: 520, f2: 260, d: 0.7, type: 'sine', v: 0.07, a: 0.08 }),                                                     // slow downward sigh
   streak: () => seqN(['C5', 'E5', 'G5', 'C6', 'E6'], 0.07, (n, t) => tone({ f: n, d: 0.18, type: 'pulse', v: 0.07, t })),          // A little fanfare
   seed: () => { tone({ f: 900, f2: 700, d: 0.05, type: 'triangle', v: 0.16 }); noise({ d: 0.02, v: 0.04, f: 2500 }); },             // C wood tok
   freeze: () => { // C crystal shimmer: two gliding sine notes with a soft tremble and a faint airy sparkle
@@ -2741,11 +2814,12 @@ const SFX = {
   fanfare: () => seqN(['G4', 'C5', 'E5', 'G5'], 0.09, (n, t) => tone({ f: n, d: 0.16, type: 'pulse', v: 0.06, t })),
   jackpot: () => seqN(['C5', 'E5', 'G5', 'C6', 'G5', 'C6', 'E6'], 0.09, (n, t) => tone({ f: n, d: 0.14, type: 'pulse', v: 0.06, t })),
 };
-function sfx(kind) {
+/** Play a named sound effect; `arg` is passed to effects that scale (e.g. sfx('home', count)). */
+function sfx(kind, arg) {
   if (!actx || muted) return;
   abus();
   const f = SFX[{ pop: 'free', home: 'deliver', coin: 'seed', shoot: 'shot' }[kind] || kind];
-  if (f) try { f(); } catch (e) {}
+  if (f) try { f(arg); } catch (e) {}
 }
 
 /* ---------- music ----------
@@ -3369,6 +3443,13 @@ function obj(name, cx, cy, w, alpha, rot) { // painted in-game object, centered,
 }
 function drawPortal(p) {
   if (p.golden && !p.active) { ctx.globalAlpha = 0.45; drawPortalInner(p); ctx.globalAlpha = 1; return; }
+  const re = homeReact(p); // one swell + glow per delivery, bigger for bigger trails (fx.js)
+  if (re.g > 0) {
+    const cx = (p.x + .5) * cell, cy = (p.y + .5) * cell, col = p.rainbow ? '#ffffff' : p.golden ? '#ffcd4a' : COLORS[p.cs[0]].fill, R = cell * (0.6 + 0.25 * re.g);
+    const gl = ctx.createRadialGradient(cx, cy, 0, cx, cy, R); gl.addColorStop(0, col + 'cc'); gl.addColorStop(1, col + '00');
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = re.g; ctx.fillStyle = gl; circ(ctx, cx, cy, R); ctx.fill(); ctx.restore();
+  }
+  if (re.s !== 1) { const cx = (p.x + .5) * cell, cy = (p.y + .5) * cell; ctx.save(); ctx.translate(cx, cy); ctx.scale(re.s, re.s); ctx.translate(-cx, -cy); drawPortalInner(p); ctx.restore(); return; }
   drawPortalInner(p);
 }
 function drawPortalInner(p) {
@@ -3401,7 +3482,7 @@ function drawPortalInner(p) {
   const pr = cell * (.14 + (waiting && !reduceMotion ? .03 * (1 + Math.sin(time * 4)) : 0));
   if (p.rainbow) {
     cols.forEach((col, i) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, pr, -spin + i * seg, -spin + (i + 1) * seg); ctx.fill(); });
-    if (p.timer < 3 && Math.floor(time * 4) % 2) strokeRing(cx, cy, cell * .47, '#ffffff', 2);
+    if (p.timer < 3 && (reduceMotion || Math.floor(time * 4) % 2)) strokeRing(cx, cy, cell * .47, '#ffffff', 2);
   } else if (p.golden) {
     if (!obj('ob-gate', cx, cy, cell * 0.9, p.active ? 1 : 0.6)) crownPath(ctx, cx, cy + cell * 0.1, cell * 0.36, p.active ? '#ffcd4a' : '#6b7299', p.active ? '#ff6f61' : '#4a4f70');
   } else {
@@ -3415,7 +3496,7 @@ function drawPortalInner(p) {
   if (!p.rainbow && !p.golden && meta.cos && meta.cos.portal !== 'none') drawPortalFx(ctx, cx, cy, cell, meta.cos.portal, reduceMotion ? 0 : time, p.x + p.y);
   if (run && run.boss && !p.rainbow && !p.golden) {
     if (p.covered) disc(cx + cell * 0.3, cy - cell * 0.3, cell * 0.08, '#fff1a8');
-    else strokeRing(cx, cy, cell * 0.47, '#fff1a8', 2, 0.3 + 0.3 * Math.sin(time * 3));
+    else strokeRing(cx, cy, cell * 0.47, '#fff1a8', 2, reduceMotion ? 0.45 : 0.3 + 0.3 * Math.sin(time * 3));
   }
 }
 function drawFlake(cx, cy, r) {
@@ -3472,8 +3553,8 @@ function draw() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = '#10152a'; ctx.fillRect(0, 0, viewW, viewH);
   if (!grid) return;
-  let sx = 0, sy = 0;
-  if (shake > 0 && !reduceMotion) { sx = (Math.random() - .5) * 8 * shake; sy = (Math.random() - .5) * 8 * shake; }
+  const fdt = Math.min(0.1, Math.max(0, time - (draw.lastT || time))); draw.lastT = time;
+  const jolt = boardJolt(fdt), sx = jolt.x, sy = jolt.y; // hit kick + short bump wobble; none under reduced motion
   ctx.save();
   ctx.translate(-cam.x + sx, -cam.y + sy);
   if (mazeCanvas) ctx.drawImage(mazeCanvas, 0, 0, COLS * cell, ROWS * cell);
@@ -3483,8 +3564,11 @@ function draw() {
   drawDen();
 
   for (const k of pickups) {
-    if (k.life < 2.5 && Math.floor(time * 8) % 2) continue;
+    // Expiring: a smooth 2 Hz pulse (scale 1 to 0.85, alpha 1 to 0.5), never an on/off blink; reduced motion: a still dashed ring.
+    const ending = k.life < 2.5, pul = ending && !reduceMotion ? 0.5 - 0.5 * Math.cos(time * TAU * 2) : 0;
     const cx = (k.x + .5) * cell, cy = (k.y + .5) * cell + (reduceMotion ? 0 : Math.sin(time * 2 + k.x) * cell * 0.04);
+    if (ending && reduceMotion) { ctx.save(); ctx.setLineDash([cell * 0.08, cell * 0.07]); strokeRing(cx, cy, cell * 0.4, '#ffffff', Math.max(2, cell * 0.05), 0.9); ctx.restore(); }
+    ctx.save(); ctx.globalAlpha = 1 - 0.5 * pul; ctx.translate(cx, cy); ctx.scale(1 - 0.15 * pul, 1 - 0.15 * pul); ctx.translate(-cx, -cy);
     const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, cell * 0.42);
     const gc = k.type === 'frost' ? '191,232,255' : '255,205,74';
     glow.addColorStop(0, `rgba(${gc},.6)`); glow.addColorStop(0.5, `rgba(${gc},.22)`); glow.addColorStop(1, `rgba(${gc},0)`);
@@ -3492,16 +3576,18 @@ function draw() {
     ctx.fillStyle = 'rgba(4,7,18,.3)'; ctx.beginPath(); ctx.ellipse(cx, (k.y + .5) * cell + cell * 0.3, cell * 0.16, cell * 0.05, 0, 0, TAU); ctx.fill();
     if (k.type === 'frost') { if (!obj('ob-flake', cx, cy, cell * 0.62, null, reduceMotion ? 0 : Math.sin(time * 1.5 + k.x) * 0.15)) drawFlake(cx, cy, cell * 0.3); }
     else if (!obj('ic-seed', cx, cy, cell * 0.5, null, reduceMotion ? 0 : Math.sin(time * 2.5 + k.x) * 0.12)) drawSeed(cx, cy, cell * 0.28); // same seed coin as the wallet
+    ctx.restore();
   }
   for (const b of bubbles) {
-    const cx = (b.x + .5) * cell, cy = (b.y + .5) * cell + Math.sin(time * 2 + b.bob) * cell * 0.04, col = COLORS[b.c], R = cell * 0.42;
-    drawTuft(ctx, cx, cy, cell * 0.27, b.c, b.bob, time, 0, 0, { glint: true, mood: 'sad' });
+    const bt = reduceMotion ? 0 : time; // bubbles sit still under reduced motion (no bob, no orbit)
+    const cx = (b.x + .5) * cell, cy = (b.y + .5) * cell + Math.sin(bt * 2 + b.bob) * cell * 0.04, col = COLORS[b.c], R = cell * 0.42;
+    drawTuft(ctx, cx, cy, cell * 0.27, b.c, b.bob, bt, 0, 0, { glint: true, mood: 'sad' });
     disc(cx, cy, R, '#cfe6ff', 0.12);
     strokeRing(cx, cy, R, '#d9ecff', Math.max(1.5, cell * 0.04), 0.8);
     ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = Math.max(1.5, cell * 0.05); ctx.lineCap = 'round';
     ctx.beginPath(); ctx.arc(cx, cy, R * 0.75, Math.PI * 1.1, Math.PI * 1.4); ctx.stroke();
     if (b.shiny) drawShinyFx(cx, cy, R, b.shinyT ? b.shinyT / (b.shinyMax || SHINY_T) : null);
-    if (b.gold) for (let k = 0; k < 3; k++) { const a = time * 2 + k * 2.1; disc(cx + Math.cos(a) * R * 1.2, cy + Math.sin(a) * R * 1.2, Math.max(1.5, cell * 0.05), '#fff1a8'); }
+    if (b.gold) for (let k = 0; k < 3; k++) { const a = bt * 2 + k * 2.1; disc(cx + Math.cos(a) * R * 1.2, cy + Math.sin(a) * R * 1.2, Math.max(1.5, cell * 0.05), '#fff1a8'); }
     if (b.locked && obj('ob-cage', cx, cy - R * 0.08, R * 2.35)) { /* painted twig cage */ }
     else if (b.locked) {
       ctx.strokeStyle = '#c9cde6'; ctx.lineWidth = Math.max(1.5, cell * 0.05);
@@ -3515,7 +3601,6 @@ function draw() {
   const squish = player.moving && !reduceMotion ? Math.sin(Math.min(1, player.p) * Math.PI) : 0;
   const hopOn = false, hp0 = 0, hopH = () => 0, hopSq = () => squish;
   const sqAng = Math.atan2(player.face[1], player.face[0]);
-  const fdt = Math.min(0.1, Math.max(0, time - (draw.lastT || time))); draw.lastT = time;
   const tskin = cosState().trail;
   if (tskin === 'ribbon' && followers.length && followers[0].rx != null) { const pp0 = ppos(); drawRibbon(ctx, [{ x: (pp0.x + .5) * cell, y: (pp0.y + .5) * cell }].concat(followers.filter(f => f.rx != null).map(f => ({ x: (f.rx + .5) * cell, y: (f.ry + .5) * cell }))), cell * 0.2, ch().fill); }
   for (let i = followers.length - 1; i >= 0; i--) {
@@ -3533,8 +3618,9 @@ function draw() {
   const pp = ppos();
   const pcx = (pp.x + .5) * cell, pcy = (pp.y + .5) * cell;
   drawTutorialHints();
-  const blinkOut = invuln > 0 && mode === 'play' && !reduceMotion && Math.floor(time * 6) % 2;
-  if (blinkOut) ctx.globalAlpha = 0.45;
+  // The hero is never faded (art-feel P3). Invulnerability shows as a dashed white-and-ink ring, from 0.4 s after a hit
+  // (so the hurt pose reads first), blinking 3/s; steady under reduced motion.
+  const invRing = invuln > 0 && mode === 'play' && time - hitAt >= FEEL.heroClearT && (reduceMotion || Math.floor(time * 6) % 2 === 0);
   {
     const c = ch();
     const lift = hopH(0), cy = pcy - lift * cell * 0.2;
@@ -3543,8 +3629,9 @@ function draw() {
     const hatId = cosState().hat;
     drawHero.phase = hopOn ? hp0 : -1;
     drawHero.mood = run.moodT > time ? run.mood : '';
-    const breathe = 0, shakeX = drawHero.mood === 'hurt' && !reduceMotion ? Math.sin(time * 60) * cell * 0.04 : 0;
-    drawHero(ctx, run.char || meta.char, pcx + shakeX, cy, cell * 0.34, player.face[0], player.face[1], 9, time, hopSq(0) + breathe, sqAng, hatId === 'leaf');
+    const breathe = 0;
+    if (invRing) { ctx.save(); ctx.setLineDash([cell * 0.12, cell * 0.08]); strokeRing(pcx, cy, cell * 0.5, '#1b1530', Math.max(4, cell * 0.11), 0.85); strokeRing(pcx, cy, cell * 0.5, '#ffffff', Math.max(2, cell * 0.05), 0.95); ctx.restore(); }
+    drawHero(ctx, run.char || meta.char, pcx, cy, cell * 0.34, player.face[0], player.face[1], 9, time, hopSq(0) + breathe, sqAng, hatId === 'leaf');
     drawHero.phase = -1; drawHero.mood = '';
     if (hatId !== 'leaf') drawHat(ctx, pcx, cy, cell * 0.34, hatId, reduceMotion ? 0 : time, run.char || meta.char);
     if (shieldUp || run.spareShield) { if (!(shieldBubble(pcx, cy, cell * (0.52 + 0.02 * Math.sin(time * 3))))) strokeRing(pcx, cy, cell * 0.5, '#9fe3d4', Math.max(2, cell * 0.06), 0.9); }
@@ -3591,7 +3678,7 @@ function draw() {
   for (const e of enemies) if (!(e.denT > 0)) drawGrumble(e);
   if (run.homeTufts && run.homeTufts.length) { // delivered tufts hop happily into their portal and shrink away
     for (let k = run.homeTufts.length - 1; k >= 0; k--) {
-      const h = run.homeTufts[k]; h.t += 1 / 60; if (h.t >= h.dur) { run.homeTufts.splice(k, 1); continue; } if (h.t < 0) continue;
+      const h = run.homeTufts[k]; h.t += fdt; if (h.t >= h.dur) { run.homeTufts.splice(k, 1); homeLand(h); continue; } if (h.t < 0) continue;
       const q = h.t / h.dur, x = lerp(h.x0, h.x1, q), y = lerp(h.y0, h.y1, q) - Math.sin(q * Math.PI) * 0.9;
       drawTuft(ctx, (x + .5) * cell, (y + .5) * cell, cell * 0.28 * (1 - 0.6 * q), h.c, k, time, 0, 0, { mood: 'happy' });
     }
@@ -5769,7 +5856,7 @@ function frame(now) {
 function step(now) {
   const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
   time += dt;
-  if (mode === 'play') {
+  if (!hitStopTick(dt) && mode === 'play') { // a hit-stop pauses the sim and the garden clock (fx.js)
     const held = tutHeld() || journeyPause;
     if (!held) updatePlayer(dt);
     if (mode === 'play' && !held) { updateEnemies(dt); updateSprouts(dt); updateShiny(dt); if (freezeT <= 0) { updateShots(dt); updateLobs(dt); } }
