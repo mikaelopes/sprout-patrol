@@ -1,0 +1,35 @@
+{
+ "S1_snowflake_next_to_pest": {
+  "mode": "play",
+  "heroHits": 0,
+  "pestKnockedOut": true
+ },
+ "S2_dizzy_boss_then_freeze": {
+  "stayedDizzy": true,
+  "bonked": true,
+  "heroHits": 0
+ },
+ "S3_after_bonk_on_top_of_line": {
+  "dazedAt1_8s": true,
+  "heroHits": 0,
+  "followersLost": 0
+ },
+ "S4_stun_only_twin_dizzy_plus_freeze": {
+  "weak": "stun",
+  "bonked": true,
+  "heroHits": 0
+ },
+ "S5_freeze_ends_on_hero": {
+  "heroHits": 0
+ },
+ "S6_stunned_pest_bump": {
+  "mode": "play",
+  "heroHits": 0,
+  "knockedOut": true
+ },
+ "S7_rhino_crash_then_bump": {
+  "variant": "king",
+  "bonked": true,
+  "heroHits": 0
+ }
+}

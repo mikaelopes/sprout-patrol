@@ -97,6 +97,10 @@ overlay.addEventListener('click', e => {
   else if (act === 'chpage') { chPage += +k; showChallenges(); }
   else if (act === 'profile') showProfile();
   else if (act === 'quiz') startQuiz();
+  else if (act === 'cloudconnect' && cloudHost() === 'firebase' && !fb.m) { // first tap: load the SDK now that the player opted in; the next tap signs in
+    const msg = document.getElementById('cloudMsg'); if (msg) msg.textContent = CLt('loading'); b.disabled = true;
+    fbLoad().then(f => f.auth.authStateReady ? f.auth.authStateReady() : 0).then(() => { b.textContent = CLt('connect'); b.disabled = false; const m2 = document.getElementById('cloudMsg'); if (m2) m2.textContent = CLt('offer'); })
+      .catch(() => { cloud.state = 'signedOut'; b.disabled = false; const m2 = document.getElementById('cloudMsg'); if (m2) m2.textContent = cloudLine(); }); }
   else if (act === 'cloudconnect') { const msg = document.getElementById('cloudMsg'); if (msg) msg.textContent = CLt('working'); b.disabled = true;
     cloudConnect().then(st => { if (st === 'choose') { showCloudChoice(); return; } if (cloud.pulled) { cloud.pulled = false; banner(CLt('pulled'), '#5cbf3a', 'star'); showHub(); return; }
       if (mode === 'profile') { showProfile(); return; } const m2 = document.getElementById('cloudMsg'); if (m2) m2.textContent = cloudLine(); if (st === 'on' || st === 'readonly') b.remove(); else b.disabled = false; }); }

@@ -356,7 +356,7 @@ function skipTutorial() {
 // Only people who can write this artifact's data (the owner; Team members at Contributor) can save to an account.
 // Everyone else never sees a Connect button that can't work: they get the save-code tip instead. can() asks nothing of the viewer.
 async function cloudProbe() {
-  if (cloudHost() === 'firebase') { cloud.can = true; fbLoad().catch(() => { cloud.can = false; const bx = overlay.querySelector('.cloudbox'); if (bx) bx.outerHTML = cloudBox(); }); return; }
+  if (cloudHost() === 'firebase') { cloud.can = true; return; } // the SDK loads on the first Connect tap, never at boot
   try { const user = window.claude && window.claude.use ? await window.claude.use('user') : null; cloud.can = user ? await user.can('data.write') : false; }
   catch (e) { cloud.can = false; }
   if (cloud.can === false && (mode === 'tutdone' || mode === 'profile')) { const bx = overlay.querySelector('.cloudbox'); if (bx) bx.outerHTML = cloudBox(); }

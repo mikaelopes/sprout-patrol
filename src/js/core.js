@@ -1,3 +1,5 @@
+// Test switches. Always {} in the shipped build; src/test/hook.js (build.py --test) fills it for the Playwright gate.
+const TEST = {};
 const PER_GROVE = 4;
 let COLS = 11, ROWS = 15, START = { x: 5, y: 7 };
 const COLORS = [

@@ -53,4 +53,10 @@ const { chromium } = require('playwright'); const fs = require('fs');
       out.S7_rhino_crash_then_bump = { variant: bs.variant, bonked: (bs.bonks || 0) > b0, heroHits: T.run().hits - h0 }; }
     return out;
   });
-  console.log(JSON.stringify(R, null, 1), errs); await b.close(); })();
+  await b.close();
+  // Compare with the expected outcome of every situation (states.expected.json); any difference or page error fails the gate.
+  const want = JSON.parse(fs.readFileSync(__dirname + '/states.expected.json', 'utf8')); const bad = [];
+  for (const k of new Set([...Object.keys(want), ...Object.keys(R)])) if (JSON.stringify(R[k]) !== JSON.stringify(want[k])) bad.push(k + ': expected ' + JSON.stringify(want[k]) + ' got ' + JSON.stringify(R[k]));
+  console.log(Object.keys(want).length - bad.length + '/' + Object.keys(want).length + ' state tests pass', errs.length ? errs : '');
+  bad.forEach(m => console.log('FAIL', m));
+  process.exit(bad.length || errs.length ? 1 : 0); })();

@@ -1,0 +1,59 @@
+{
+ "name": "Fixture Keeper",
+ "coins": 1234,
+ "char": "ember",
+ "owned": {
+  "pip": true,
+  "ember": true,
+  "nova": true
+ },
+ "mode": "normal",
+ "up": {
+  "heart": 2,
+  "trail": 3,
+  "grip": 0,
+  "speed": 2,
+  "frost": 0,
+  "rainbow": 0,
+  "reroll": 0,
+  "coin": 0
+ },
+ "cutsV": 2,
+ "st": {
+  "pops": 900,
+  "bosses": 6,
+  "streaks": 12,
+  "runs": 40,
+  "tufts": 3100,
+  "seedsTotal": 9000,
+  "bestGarden": 11,
+  "bestCombo": 17,
+  "noHit": 4,
+  "rainbow": 5,
+  "evos": 3,
+  "oneHeartGrove": 1
+ },
+ "claimed": {
+  "c1": 1
+ },
+ "adv": {
+  "1-1": 3,
+  "1-2": 3,
+  "1-3": 2,
+  "1-4": 3,
+  "1-8": 3,
+  "2-1": 3,
+  "2-2": 1,
+  "2-8": 2
+ },
+ "discovered": {},
+ "nameSet": true,
+ "tutorialDone": true,
+ "journeyDone": true,
+ "lang": "en",
+ "road": 6,
+ "gear": {},
+ "gearOn": [],
+ "schema": 3,
+ "savedAt": 1700000000000
+}

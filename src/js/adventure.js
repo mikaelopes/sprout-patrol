@@ -1,12 +1,12 @@
 // Endless runs are saved at the start of every garden, so a closed tab or a reload can continue the run.
 function saveRun() {
   if (!run || run.kind !== 'endless') return;
-  try { meta.savedRun = JSON.parse(JSON.stringify({ v: 1, at: Date.now(), run, sk, wp, evo })); saveMeta(); } catch (e) {}
+  try { meta.savedRun = JSON.parse(JSON.stringify({ v: RUN_V, at: Date.now(), run, sk, wp, evo })); saveMeta(); } catch (e) {}
 }
 function clearRun() { if (meta.savedRun) { delete meta.savedRun; saveMeta(); } }
 function continueRun() {
   const sv = meta.savedRun;
-  if (!sv || !sv.run) return false;
+  if (!savedRunOk(sv)) { if (sv) clearRun(); return false; }
   freshRun();
   sk = { ...sk, ...sv.sk }; wp = { ...wp, ...sv.wp }; evo = { ...evo, ...sv.evo };
   for (const k in sk) if (!SKILLS[k]) delete sk[k]; for (const k in wp) if (!WEAPONS[k]) delete wp[k]; for (const k in evo) if (!EVO2[k] && !EVOS[k]) delete evo[k];
@@ -174,6 +174,7 @@ function chestPrompt() {
 }
 function advResult(won, quit) {
   mode = 'advresult';
+  if (TEST.onResult) TEST.onResult(won, quit);
   if (run.daily) { dailyResult(won, quit); return; }
   const { g, i } = run.adv;
   const earned = run.coins;

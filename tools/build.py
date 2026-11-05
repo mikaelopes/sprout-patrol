@@ -7,15 +7,26 @@
 All scripts in src/build.json are concatenated, in order, inside ONE closure, so they share scope exactly as the
 old single file did. Order matters: a file may only use top-level names at call time, never at load time, unless
 the defining file comes earlier in the list.
-Usage: python3 tools/build.py [--check]   (--check: run node --check on the bundled script)
+Usage: python3 tools/build.py [--check] [--test OUT]
+  --check     run node --check on the bundled script
+  --test OUT  write ONLY a test build to OUT (src/test/hook.js appended inside the closure; gitignored path, e.g. tests/sim/game_*.html).
+              dist/ and index.html are left alone, so the shipped files never contain the hook.
 """
 import json, os, subprocess, sys, tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 S = lambda *p: os.path.join(ROOT, 'src', *p)
 cfg = json.load(open(S('build.json')))
-js = '(() => {\n' + ''.join(open(S('js', f)).read() for f in cfg['scripts']) + '})();'
-html = (open(S('head.html')).read() + '<style>\n' + open(S('css', 'game.css')).read() + '</style>\n'
-        + open(S('body.html')).read() + '<script>\n' + js + '\n</script>\n' + cfg.get('tail', ''))
+TEST_OUT = sys.argv[sys.argv.index('--test') + 1] if '--test' in sys.argv else None
+def bundle(extra=''):
+    js = '(() => {\n' + ''.join(open(S('js', f)).read() for f in cfg['scripts']) + extra + '})();'
+    return js, (open(S('head.html')).read() + '<style>\n' + open(S('css', 'game.css')).read() + '</style>\n'
+                + open(S('body.html')).read() + '<script>\n' + js + '\n</script>\n' + cfg.get('tail', ''))
+if TEST_OUT:
+    # The hook only touches names at call time, so appending it after the last script is equivalent to inserting it before the boot lines.
+    tjs, thtml = bundle('\n' + open(S('test', 'hook.js')).read() + '\n')
+    with open(TEST_OUT, 'w') as f: f.write('<!doctype html><meta charset="utf-8">' + thtml)
+    print('built test page', TEST_OUT); sys.exit(0)
+js, html = bundle()
 if '--check' in sys.argv:
     with tempfile.NamedTemporaryFile('w', suffix='.js', delete=False) as f: f.write(js)
     r = subprocess.run(['node', '--check', f.name], capture_output=True, text=True); os.unlink(f.name)

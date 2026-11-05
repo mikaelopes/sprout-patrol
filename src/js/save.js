@@ -5,6 +5,11 @@ let meta = {
   claimed: {}, adv: {}, discovered: {},
 };
 const META_DEFAULT = JSON.stringify(meta);
+// Version of the saved Endless run (meta.savedRun). Bump it whenever a run.* field is renamed or its meaning changes:
+// a saved run with another version is dropped on load (quietly), and progress (meta) is always kept.
+const RUN_V = 1;
+const isObj = o => !!o && typeof o === 'object' && !Array.isArray(o);
+function savedRunOk(sv) { return isObj(sv) && sv.v === RUN_V && isObj(sv.run) && sv.run.kind === 'endless' && Number.isFinite(sv.run.garden) && isObj(sv.sk) && isObj(sv.wp) && isObj(sv.evo); }
 // Tutorials, guided steps, learn cards and boss intros are shown once per player: whatever save wins, the "seen" flags are kept.
 function mergeSeen(into, from) {
   if (!into || !from) return into;
@@ -56,6 +61,7 @@ function applySave(saved) {
   mergeSeen(meta, prev); migrateCuts(meta); migrateNest2(meta);
   if (!CHARS[meta.char] || !meta.owned[meta.char]) meta.char = 'pip';
   if (!MODES[meta.mode]) meta.mode = 'normal';
+  if (meta.savedRun && !savedRunOk(meta.savedRun)) delete meta.savedRun; // only the run is dropped, never progress
 }
 // Some browsers (Safari, private windows, strict tracking protection) block or wipe storage for pages shown inside
 // claude.ai, so the game checks whether the browser actually keeps data and offers a cloud save and a save code.
@@ -139,7 +145,9 @@ const inClaude = () => !!(window.claude && window.claude.use);
 const cloudHost = () => inClaude() ? 'claude' : FB.apiKey ? 'firebase' : null;
 const acctName = () => cloudHost() === 'firebase' ? 'Google' : 'Claude';
 const fb = { ready: null, m: null, app: null, auth: null, db: null };
-function fbLoad() { // loaded once at boot so the sign-in popup opens straight from the tap (popup blockers need that)
+// Loads the Firebase SDK. Only called after the player opted in: on the first Connect tap, or at boot when meta.cloudOn is already true.
+// Loading it before the sign-in tap keeps the popup directly inside the second tap (popup blockers need that).
+function fbLoad() {
   if (fb.ready) return fb.ready;
   const base = 'https://www.gstatic.com/firebasejs/' + FB_V + '/';
   fb.ready = (window.__fbMock ? Promise.resolve(window.__fbMock) : Promise.all(['firebase-app', 'firebase-auth', 'firebase-firestore'].map(n => import(base + n + '.js'))).then(([a, u, f]) => ({ ...a, ...u, ...f })))
@@ -162,11 +170,12 @@ async function fbRef(interactive) {
 }
 const CL = {
   en: { offer: 'Keep your progress in your Claude account?', connect: 'Connect account', later: 'Not now', on: '✓ Saved to your Claude account.', off: 'Account not connected.',
-        signedOut: 'Sign in to Claude to save to your account.', readonly: 'This link can\'t save to accounts. Use your save code.', working: 'Connecting…', disconnect: 'Disconnect', pulled: 'Loaded your account save.' },
+        signedOut: 'Sign in to Claude to save to your account.', readonly: 'This link can\'t save to accounts. Use your save code.', working: 'Connecting…', loading: 'Loading…', disconnect: 'Disconnect', pulled: 'Loaded your account save.' },
   pt: { offer: 'Guardar seu progresso na sua conta Claude?', connect: 'Conectar conta', later: 'Agora não', on: '✓ Salvo na sua conta Claude.', off: 'Conta não conectada.',
-        signedOut: 'Entre no Claude para salvar na conta.', readonly: 'Este link não salva em contas. Use seu código.', working: 'Conectando…', disconnect: 'Desconectar', pulled: 'Save da sua conta carregado.' },
+        signedOut: 'Entre no Claude para salvar na conta.', readonly: 'Este link não salva em contas. Use seu código.', working: 'Conectando…', loading: 'Carregando…', disconnect: 'Desconectar', pulled: 'Save da sua conta carregado.' },
 };
-const CLt = k => (k === 'connect' && cloudHost() === 'firebase') ? (LANG === 'pt' ? 'Entrar com Google' : 'Sign in with Google') : (CL[LANG] || CL.en)[k].replace('Claude', acctName()).replace('Sign in to Google to save to your account.', 'Google sign-in didn\'t finish. Try again.').replace('Entre no Google para salvar na conta.', 'O login do Google não terminou. Tente de novo.');
+// With Firebase the button reads Connect until the SDK is loaded (first tap), then Sign in with Google (second tap).
+const CLt = k => (k === 'connect' && cloudHost() === 'firebase' && fb.m) ? (LANG === 'pt' ? 'Entrar com Google' : 'Sign in with Google') : (CL[LANG] || CL.en)[k].replace('Claude', acctName()).replace('Sign in to Google to save to your account.', 'Google sign-in didn\'t finish. Try again.').replace('Entre no Google para salvar na conta.', 'O login do Google não terminou. Tente de novo.');
 function cloudJson() { // one document, max 256 KiB: drop the oldest play-log entries if needed
   const m = { ...meta }; let j = JSON.stringify(m);
   while (j.length > 240000 && m.log && m.log.length > 20) { m.log = m.log.slice(Math.floor(m.log.length / 4)); j = JSON.stringify(m); }
