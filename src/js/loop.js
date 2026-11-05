@@ -68,7 +68,6 @@ idbRestore();
 function uiScale() { const z = Math.max(1, Math.min(1.75, Math.round(Math.min(innerWidth / 440, innerHeight / 860) * 20) / 20)); document.documentElement.style.setProperty('--uiz', z); }
 uiScale(); addEventListener('resize', uiScale);
 if ('ResizeObserver' in window) new ResizeObserver(fit).observe(boardEl); else addEventListener('resize', fit);
-document.documentElement.dataset.theme = 'moss'; // menus use the Night forest palette
 setTimeout(cloudProbe, 0);
 if (meta.cloudOn) setTimeout(() => { cloudConnect(false).then(st => { if (st === 'choose' && (mode === 'hub' || mode === 'splash')) { showCloudChoice(); return; } if (cloud.pulled) { cloud.pulled = false; if (mode === 'hub') showHub(); else if (mode === 'splash') showSplash(); } }); }, 0); // only for players who connected before
 showSplash();

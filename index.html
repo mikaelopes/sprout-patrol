@@ -12,15 +12,15 @@
 <style>
 /* Layout: one-screen portrait arcade, HUD strip on top, scrolling hedge-maze viewport in the middle, optional thumb pad at the bottom. Single night-garden look on purpose. */
 :root{
-  --night:#141a2e;
-  --panel:#222a4d;
-  --line:#36406e;
-  --ink:#f5efe3;
-  --muted:#b4bbd9;
+  --night:#14251b;
+  --panel:#22392b;
+  --line:#3f6249;
+  --ink:#f2ecd8;
+  --muted:#b5c6ab;
   --gold:#ffcd4a;
   --gold-ink:#2b2000;
   --coral:#ff6f61;
-  --edge:#0d1122;
+  --edge:#0c1610;
   --display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
   --label:"Fredoka","Trebuchet MS",system-ui,sans-serif;
   --accent:#8fd35b;
@@ -65,11 +65,11 @@ canvas{display:block;border-radius:14px;box-shadow:0 0 0 1px var(--line)}
 .loadout.big .lslot svg{width:20px;height:20px}
 .lsep{width:1px;height:20px;background:var(--line);margin:0 4px}
 .llegend{display:flex;justify-content:center;gap:14px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.tip{position:absolute;left:10px;right:10px;top:10px;background:rgba(20,26,46,.94);border:1.5px solid var(--gold);border-radius:12px;padding:8px 12px;font-weight:800;font-size:13.5px;line-height:1.35;color:var(--ink);z-index:4;pointer-events:none;text-align:center}
+.tip{position:absolute;left:10px;right:10px;top:10px;background:rgba(20,37,27,.94);border:1.5px solid var(--gold);border-radius:12px;padding:8px 12px;font-weight:800;font-size:13.5px;line-height:1.35;color:var(--ink);z-index:4;pointer-events:none;text-align:center}
 .tip[hidden]{display:none}
 .apill{flex:none;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:none;border-radius:99px;padding:3px 9px;background:var(--panel);color:var(--muted);border:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
 .apill.ready{background:var(--gold);color:var(--gold-ink);border-color:var(--gold)}
-.ability{position:absolute;right:10px;bottom:10px;width:64px;height:64px;border-radius:50%;border:2px solid var(--ink);background:conic-gradient(var(--gold) calc(var(--cd,1)*360deg),rgba(34,42,77,.85) 0);color:var(--gold-ink);font-family:var(--display);font-size:13px;letter-spacing:.03em;cursor:pointer;display:grid;place-items:center;padding:0;z-index:3;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.ability{position:absolute;right:10px;bottom:10px;width:64px;height:64px;border-radius:50%;border:2px solid var(--ink);background:conic-gradient(var(--gold) calc(var(--cd,1)*360deg),rgba(34,57,43,.85) 0);color:var(--gold-ink);font-family:var(--display);font-size:13px;letter-spacing:.03em;cursor:pointer;display:grid;place-items:center;padding:0;z-index:3;box-shadow:0 4px 14px rgba(0,0,0,.45)}
 .ability span{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--panel);color:var(--ink)}
 .ability.ready span{background:var(--gold);color:var(--gold-ink)}
 .ability[hidden]{display:none}
@@ -271,7 +271,7 @@ body.adv .xpbar{display:none}body.adv #score{margin-left:auto}
 .heart{width:17px;height:15px;flex:none}
 .hearts.many .heart{width:13px;height:12px}
 .hearts.many{gap:1px}
-body.menu .overlay{background:rgba(16,21,40,.94)}
+body.menu .overlay{background:rgba(15,29,20,.94)}
 .card > .btn.ghost.small:last-child{position:sticky;bottom:-16px;margin-bottom:-4px;background:var(--panel);z-index:2}
 .card h1,.card h2,.eyebrow,.card p{text-wrap:balance}
 .lslot b{font-size:12px;min-width:15px;height:15px;line-height:15px}
@@ -385,7 +385,7 @@ p.small svg{width:14px;height:14px;vertical-align:-2px}
 .runmap .mlinks{position:absolute;inset:0;pointer-events:none;overflow:visible}
 .mrow2{position:relative;display:flex;justify-content:space-around;gap:6px;z-index:1}
 .mnode{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;color:var(--ink);font-family:var(--body);cursor:pointer;min-width:76px;padding:0}
-.mnode .disc{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--nb) 35%,#1c2342);border:3px solid color-mix(in srgb,var(--nb) 55%,#36406e);font-size:24px}
+.mnode .disc{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--nb) 35%,#1d3226);border:3px solid color-mix(in srgb,var(--nb) 55%,#3f6249);font-size:24px}
 .mnode .disc svg{width:26px;height:26px}
 .mnode.boss .disc{width:64px;height:64px}.mnode.boss .disc svg{width:34px;height:34px}
 .mnode .lbl{font-size:13px;font-weight:700;color:var(--muted)}
@@ -418,22 +418,22 @@ p.small svg{width:14px;height:14px;vertical-align:-2px}
 .gear .pips{margin-left:0}
 .gear .max{font-weight:800;color:var(--accent);text-align:center;font-size:14px}
 
-/* ===== Storybook Garden theme: cream paper cards, chunky raised buttons, one job per color =====
-   green = go / primary, white = secondary, gold = currency & rewards, coral = danger, brown ink = text on paper.
-   The night maze stays dark so the painted characters pop; menus sit on warm paper like a picture book. */
+/* ===== Moss menu skin (owner decision: the one menu palette; art-feel P5) =====
+   green = go / primary, tile = secondary, gold = currency & rewards, coral = danger, cream ink on moss cards.
+   Page, header buttons, HUD chips and cards all use these tokens; there are no other palettes. */
 :root{
-  --paper:#fff7e8; --paper2:#fbebd2; --paperLine:#e8cfa6; --paperEdge:#d6b787;
-  --inkDark:#4a3426; --inkSoft:#8b6f5a; --leaf:#3e8e2e;
+  --paper:#22392b; --paper2:#2b4636; --paperLine:#3f6249; --paperEdge:#14251b;
+  --inkDark:#f2ecd8; --inkSoft:#b5c6ab; --leaf:#a6e070;
   --go1:#8ee05a; --go2:#5cbf3a; --goEdge:#2f7d22;
   --sun1:#ffe27a; --sun2:#f5b82e; --sunEdge:#b97a10;
-  --tile:#fff; --tileShade:#f1e2c6; --paperTop:#fffaf0; --paperBot:#fdf0da; --wallet:#c27a0e; --ghostInk:var(--inkDark);
+  --tile:#2f4d3b; --tileShade:#1d3226; --paperTop:#27412f; --paperBot:#1d3226; --wallet:#ffcd4a; --ghostInk:var(--inkDark);
 }
-body{background:radial-gradient(120% 70% at 50% 0%,#2c4a6e 0%,#182540 55%,#111a2d 100%) fixed}
-.overlay{background:rgba(10,14,28,.55);backdrop-filter:blur(2px)}
+body{background:radial-gradient(120% 70% at 50% 0%,#2f5a3c 0%,#1b3324 55%,#0f1d14 100%) fixed}
+.overlay{background:rgba(8,16,11,.55);backdrop-filter:blur(2px)}
 .card{--panel:var(--paper);--night:var(--paper2);--line:var(--paperLine);--ink:var(--inkDark);--muted:var(--inkSoft);--gold:#d68a12;
   background:linear-gradient(180deg,var(--paperTop) 0%,var(--paper) 40%,var(--paperBot) 100%);color:var(--inkDark);
   border:2px solid var(--paperLine);box-shadow:0 5px 0 var(--paperEdge),0 14px 34px rgba(0,0,0,.38);border-radius:22px}
-.card h1{color:#f08a24;text-shadow:0 3px 0 #b35a12,0 0 0 #000;-webkit-text-stroke:1.5px #fff}
+.card h1{color:#f08a24;text-shadow:0 3px 0 #b35a12}
 .card h2{color:var(--inkDark)}
 .card p{color:var(--inkSoft)}
 .eyebrow{color:var(--leaf)}
@@ -487,7 +487,7 @@ body{background:radial-gradient(120% 70% at 50% 0%,#2c4a6e 0%,#182540 55%,#111a2
 .grovemap .node.done{color:#fff;text-shadow:0 0 3px #1d4a15,0 2px 0 #1d4a15,1px 0 0 #1d4a15,-1px 0 0 #1d4a15}
 .grovemap .nstars{text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .chesthint{opacity:1}
-.mrow .tipchip{min-height:40px}
+.mrow .tipchip{min-height:44px}
 .pager .btn.small{min-width:48px;padding-left:16px;padding-right:16px}
 .bigstars span[style*="var(--line)"]{color:#5f7d66 !important}
 .pager{display:flex;align-items:center;justify-content:center;gap:14px;font-weight:800;color:var(--muted)}
@@ -615,13 +615,6 @@ body{background:radial-gradient(120% 70% at 50% 0%,#2c4a6e 0%,#182540 55%,#111a2
 .hubgrid.six .tile .t{font-size:clamp(11px,3.1vw,14.5px);max-width:100%;white-space:nowrap;letter-spacing:0}
 #bakMsg{min-height:0;line-height:1.35;margin:2px 0 8px;flex-shrink:0}
 #saveBox,.card .field{flex-shrink:0}
-/* menu palettes (html[data-theme]); default = cream paper */
-html[data-theme="kraft"]{--paper:#eadcc0;--paper2:#dfcca8;--paperLine:#c9ad82;--paperEdge:#a8875a;--inkDark:#3b2a1d;--inkSoft:#6b5440;--tile:#f4ead6;--tileShade:#dcc7a2;--paperTop:#efe3cb;--paperBot:#e2d1b0;--leaf:#3b7a2a}
-html[data-theme="sage"]{--paper:#dfe8d6;--paper2:#cfdcc3;--paperLine:#b3c7a2;--paperEdge:#8eaa79;--inkDark:#26361f;--inkSoft:#56694b;--tile:#eef3e8;--tileShade:#c9d8bc;--paperTop:#e7eedf;--paperBot:#d4e0c8;--leaf:#2f7a2a;--wallet:#a66a08}
-html[data-theme="moss"]{--paper:#22392b;--paper2:#2b4636;--paperLine:#3f6249;--paperEdge:#14251b;--inkDark:#f2ecd8;--inkSoft:#b5c6ab;--tile:#2f4d3b;--tileShade:#1d3226;--paperTop:#27412f;--paperBot:#1d3226;--leaf:#a6e070;--wallet:#ffcd4a}
-html[data-theme="night"]{--paper:#1f2945;--paper2:#283456;--paperLine:#3b4a76;--paperEdge:#10172b;--inkDark:#eef1ff;--inkSoft:#a9b3d6;--tile:#2b385d;--tileShade:#1a2340;--paperTop:#24304f;--paperBot:#1a2340;--leaf:#9be06a;--wallet:#ffcd4a}
-html[data-theme="plum"]{--paper:#2f2442;--paper2:#3a2d52;--paperLine:#56456f;--paperEdge:#1b1429;--inkDark:#f7eefc;--inkSoft:#c5b5d8;--tile:#43345c;--tileShade:#251c36;--paperTop:#352849;--paperBot:#251c36;--leaf:#b2ea78;--wallet:#ffcd4a}
-html[data-theme="moss"] .card h1,html[data-theme="night"] .card h1,html[data-theme="plum"] .card h1{-webkit-text-stroke:0}
 .lvup .eyebrow,.card.learn .eyebrow{color:#10300a !important}
 .card .choice.evo small{color:#8a5a00 !important;opacity:1}
 .tutskip{position:absolute;top:54px;right:8px;z-index:6;min-height:40px;padding:8px 16px;border-radius:99px;border:2px solid rgba(255,255,255,.55);background:rgba(16,28,22,.78);color:#fff7e8;font:700 15px var(--body,system-ui);cursor:pointer}
@@ -642,6 +635,38 @@ html[data-theme="moss"] .card h1,html[data-theme="night"] .card h1,html[data-the
 .chestprompt{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 12px;border:2px solid #ffd970;border-radius:16px;background:rgba(255,205,74,.1);margin:4px 0}
 .chestprompt .chestsm{width:44px;height:auto}.chestprompt.stuck{border-color:#ff9a7a;background:rgba(255,111,97,.08)}.chestprompt .txt{flex:1;display:flex;align-items:center;gap:8px;color:var(--ink)}.chestprompt .txt span{font-weight:800;color:#ffd970}
 .chestprompt .cbtns{display:flex;gap:6px;width:100%}.chestprompt .cbtns .buy{flex:1 1 auto;min-height:44px;font-size:15px;padding:6px 8px;text-align:center;justify-content:center}.chestprompt .cbtns .btn{flex:0 0 auto;margin:0;min-height:44px;font-size:15px;padding:6px 12px}.chestprompt .txt b{font-size:16px}
+
+/* ---- HUD & menus slice (menus-onboarding P1/P2/P4) ---- */
+/* touch targets >= 44x44 CSS px */
+.btn,.buy,.ctrl,.tile,.coachbox .jskip,.tutskip{min-height:44px;box-sizing:border-box}
+.buy{justify-content:center}
+.coachbox .jskip{margin:-4px 0;padding:6px 8px}
+/* header: Pause only in play; the save chip takes its slot on the hub */
+.iconbtn[hidden]{display:none}
+.savechip{position:relative;color:var(--leaf)}
+.savechip .sdot{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:#c9301f;color:#fff;font:800 12px/18px var(--body);font-style:normal;text-align:center}
+.savechip .sdot[hidden]{display:none}
+/* one-row play HUD: stars + time, trail (never shrinks), then colour counters (shrink first) */
+.xprow{gap:8px;min-width:0}
+#cap{display:inline-flex;align-items:center;gap:3px;flex:none}
+#cap svg{width:18px;height:18px}
+body.adv #lv{order:0;flex:none}
+body.adv #cap{order:1}
+body.adv #keychip{order:2;flex:none}
+body.adv #goals{order:3;margin-left:auto;min-width:0;overflow:hidden;gap:6px}
+body.adv #apill{order:4;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.cap.goals .g img{width:18px;height:18px}
+.partime{margin-left:4px;font-variant-numeric:tabular-nums}
+/* hub: the hero card is a shortcut to Characters; Nest hint after the first garden */
+button.who{width:100%;font-family:var(--body);color:var(--ink);cursor:pointer}
+button.nesthint{border-color:var(--leaf)}
+button.nesthint>svg{width:26px;height:26px}
+/* Profile: the save line above already says "this device only" */
+.card .mission + .cloudbox:not(:has(button)){display:none}
+/* map star-chest bar: label stays on one line; the buttons drop below it when the row is full */
+.chestbar:has(> .chestsm){flex-wrap:wrap}
+.chestbar:has(> .chestsm) .txt{min-width:max-content}
+.chestbar:has(> .chestsm) .buy{flex:1 1 auto}
 </style>
 </head>
 <body>
@@ -654,6 +679,7 @@ html[data-theme="moss"] .card h1,html[data-theme="night"] .card h1,html[data-the
     <div class="coins" id="coins" aria-label="Seeds"></div>
     <button class="iconbtn" id="soundBtn" aria-label="Toggle sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="soundWave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
     <button class="iconbtn" id="pauseBtn" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg></button>
+    <button class="iconbtn savechip" id="saveChip" hidden aria-label="Save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6.2 9.6 4.2 4.2 0 0 0 7 18z"/><path d="M12 15v-5M9.5 12.5L12 10l2.5 2.5"/></svg><i class="sdot" hidden>!</i></button>
   </div>
   <div class="xprow">
     <span class="lv" id="lv">Lv 1</span>
@@ -915,6 +941,17 @@ Object.assign(S.pt, {
   repT: 'Ninho sem fim', repLocked: 'Maximize qualquer melhoria acima para abrir melhorias pequenas que você compra para sempre.', repLv: n => `Nv ${n} · +${n}%`, repSub: 'Melhorias pequenas e sem limite. Cada uma custa 15% a mais.',
   roadHow: 'Cada brotinho que você entrega te leva adiante na estrada.', changeLook: 'Chapéus e visual', readyTag: 'Pegar', roadShort: 'Estrada', bookShort: 'Evoluções',
   chipSeeds: 'Sementes que pegar', chipClear: '+30 ao terminar', chipRing: n => `+${n} do anel`, ringRule: 'Perder um dia nunca zera o anel. O dia 7 paga mais.',
+});
+// HUD & menus slice (design/revamp/menus-onboarding.md P1-P4): short labels, both languages.
+Object.assign(S.en, {
+  starChest: () => 'Chest', chestReady: 'Ready!', saveChip: 'Save your progress', saveHere: 'Saved on this device only.',
+  nestNew: 'New: Nest ›', nestNewD: 'Spend seeds on upgrades',
+  chDesc: { grove2: 'Reach grove 2', grove3: 'Reach grove 3', grove4: 'Reach grove 4' },
+});
+Object.assign(S.pt, {
+  starChest: () => 'Baú', chestReady: 'Pronto!', saveChip: 'Salvar progresso', saveHere: 'Salvo só neste aparelho.',
+  nestNew: 'Novo: Ninho ›', nestNewD: 'Gaste sementes em melhorias',
+  chDesc: { grove2: 'Chegue ao bosque 2', grove3: 'Chegue ao bosque 3', grove4: 'Chegue ao bosque 4' },
 });
 const t = (k, ...a) => { const v = S[LANG][k] ?? S.en[k]; return typeof v === 'function' ? v(...a) : v; };
 
@@ -3618,6 +3655,9 @@ function updateHud() {
   const menu = inMenu();
   document.querySelector('.xprow').style.visibility = menu ? 'hidden' : '';
   document.body.classList.toggle('menu', menu);
+  // Pause only works in play; on the hub its slot holds the save chip (opens the account / save-code box) until signed in.
+  document.getElementById('pauseBtn').hidden = !['play', 'pause'].includes(mode);
+  { const sc = document.getElementById('saveChip'); sc.hidden = !(mode === 'hub' && cloud.state !== 'on'); sc.querySelector('.sdot').hidden = storageOK; sc.setAttribute('aria-label', t('saveChip')); sc.title = t('saveChip'); }
   const lo = document.getElementById('loadout');
   const showLo = run.kind === 'endless' && ['play', 'pause', 'cards', 'clear', 'camp', 'bossintro'].includes(mode);
   lo.hidden = !showLo;
@@ -3633,12 +3673,14 @@ function updateHud() {
   document.getElementById('coins').innerHTML = SEED + fmt(menu ? meta.coins : run.coins);
   document.getElementById('score').textContent = run.kind === 'tutorial' ? '' : t('pts', fmt(run.score || 0));
   document.getElementById('lv').style.color = run.kind === 'adv' ? 'var(--gold)' : '';
-  document.getElementById('lv').innerHTML = run.kind === 'adv' ? '★'.repeat(advStarsFor(run.adv.g, run.hits, run.at, run.par)) + (run.par ? ` <span style="color:${run.at > run.par ? 'var(--coral)' : 'var(--muted)'};margin-left:6px">${mmss(run.at)}/${mmss(run.par)}</span>` : '') : t('lv') + ' ' + run.level;
+  document.getElementById('lv').innerHTML = run.kind === 'adv' ? '★'.repeat(advStarsFor(run.adv.g, run.hits, run.at, run.par)) + (run.par ? ` <span class="partime" style="color:${run.at > run.par ? 'var(--coral)' : 'var(--muted)'}">${run.at > run.par ? '+' + mmss(run.at - run.par) : mmss(run.par - run.at)}</span>` : '') : t('lv') + ' ' + run.level;
   document.body.classList.toggle('adv', run.kind === 'adv');
   document.getElementById('xpfill').style.width = Math.min(100, run.xp / xpNeed() * 100) + '%';
-  document.getElementById('cap').textContent = t('trail') + ' ' + (followers ? followers.length : 0) + '/' + cap();
+  // Trail capacity is the number players need while steering: icon + count, never shrunk (see .xprow CSS).
+  { const ce = document.getElementById('cap'), txt = (followers ? followers.length : 0) + '/' + cap();
+    if (ce.dataset.v !== txt) { ce.dataset.v = txt; ce.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${I.stack}</svg>${txt}`; ce.setAttribute('aria-label', t('trail') + ' ' + txt); } }
   { const gl = document.getElementById('goals'), on = !!(run.kind === 'adv' && !run.boss && run.goalC && Object.keys(run.goalC).length && !MENU_MODES.includes(mode));
-    gl.hidden = !on; document.getElementById('score').hidden = on;
+    gl.hidden = !on; document.getElementById('score').hidden = on || run.kind === 'adv'; // score is not a goal in Adventure
     if (on) { const html = Object.keys(run.goalC).map(c => { const left = Math.max(0, run.goalC[c] - ((run.gotC && run.gotC[c]) || 0)), im = artGet(TUFT_ART[c]);
         return `<span class="g${left ? '' : ' done'}">${im ? `<img src="${im}" alt="">` : `<i style="background:${COLORS[c].fill}"></i>`}${left ? left : '✓'}</span>`; }).join('');
       if (gl.dataset.v !== html) { gl.dataset.v = html; gl.innerHTML = html; } } }
@@ -3845,6 +3887,7 @@ function show(html) {
   const prevS = same && sc0 ? sc0.scrollTop : 0, prevC = same && cd0 ? cd0.scrollTop : 0;
   overlay.innerHTML = html;
   overlay.hidden = false;
+  tidyScreen();
   const sc = overlay.querySelector('.scroll'), cd = overlay.querySelector('.card');
   if (sc) sc.scrollTop = prevS;
   if (cd) cd.scrollTop = prevC;
@@ -3855,6 +3898,13 @@ function show(html) {
   if (kbUser || matchMedia('(pointer:fine)').matches) { const b = overlay.querySelector('.node.cur') || overlay.querySelector('.btn:not(.ghost):not([disabled])') || overlay.querySelector('button:not([disabled])'); if (b) b.focus({ preventScroll: true }); }
 }
 let lastShown = '', kbUser = false;
+/** Menu-side touch-ups for screens whose markup another module builds (prelevel/results live in adventure.js). */
+function tidyScreen() {
+  if (mode === 'prelevel') { // "GROVE 1 · GARDEN 3" over "Garden 1-3" says the same thing twice; boss screens keep it
+    const e = overlay.querySelector('.card > .eyebrow:first-child'), h = overlay.querySelector('.card > h2');
+    if (e && h && /\d-\d+$/.test(h.textContent.trim())) e.remove(); }
+  if (mode === 'advresult' && nestHintOn()) { const nx = overlay.querySelector('[data-act="advnext"]'); if (nx) nx.insertAdjacentHTML('afterend', nestHintHtml()); }
+}
 function hide() { overlay.hidden = true; overlay.innerHTML = ''; lastShown = ''; updateHud(); }
 function avatar(k, size, hat, mood) {
   const c = CHARS[k];
@@ -4288,11 +4338,12 @@ function showHub() {
     <div class="hubtop"><div><div class="eyebrow">${t('welcome')}</div><h2>${esc(meta.name)}</h2></div></div>
     ${meta.refundNote ? `<div class="chestbar refund"><div class="txt"><span><i class="rseed">${SEED}</i> +${meta.refundNote} · ${LANG === 'pt' ? 'O Ninho mudou: devolvemos suas sementes para você escolher de novo.' : 'The Nest changed: your seeds are back so you can choose again.'}</span></div></div>` : ''}
     ${!storageOK && cloud.state !== 'on' ? `<div class="chestbar" style="border-color:var(--coral)"><div class="txt"><span>${t('hubWarn')}</span></div><button class="buy" data-act="profile">${t('hubWarnBtn')}</button></div>` : ''}
-    <div class="who">${avatar(meta.char, 44, cosState().hat)}<div class="txt"><span class="t">${c.name} · ${L(md.name)}</span><span class="d">${meta.st.bestGarden ? t('bestRun', Math.ceil(meta.st.bestGarden / PER_GROVE), (meta.st.bestGarden - 1) % PER_GROVE + 1) : t('bestNone')}</span></div></div>
+    <button class="who" data-act="chars">${avatar(meta.char, 44, cosState().hat)}<div class="txt"><span class="t">${c.name}${endlessOpen() ? ' · ' + L(md.name) : ''}</span>${endlessOpen() ? `<span class="d">${meta.st.bestGarden ? t('bestRun', Math.ceil(meta.st.bestGarden / PER_GROVE), (meta.st.bestGarden - 1) % PER_GROVE + 1) : t('bestNone')}</span>` : ''}</div></button>
     <button class="btn" data-act="map">${t('adventure')} · ${t('grove')} ${advTop()}</button>
     ${meta.savedRun && meta.savedRun.run ? `<button class="btn btn2l" data-act="continue">${t('continueRun')}<small>${t('continueSub', Math.floor((meta.savedRun.run.garden - 1) / PER_GROVE) + 1, (meta.savedRun.run.garden - 1) % PER_GROVE + 1)}</small></button>` : ''}
     ${endlessOpen() ? `<button class="btn ghost" data-act="start">${meta.savedRun ? t('newRun') : t('endless')} · ${L(md.name)}</button>` : ''}
     ${dailyBar()}
+    ${nestHintOn() ? nestHintHtml() : ''}
     <div class="hubgrid six">
       <button class="tile" data-act="chars">${svg('user', '#ffcd4a')}<span class="t">${t('characters')}</span><span class="d">${t('unlockedN', Object.keys(meta.owned).length, Object.keys(CHARS).length)}</span></button>
       <button class="tile" data-act="nest">${svg('nest', '#9fe3d4')}<span class="t">${t('nest')}</span><span class="d">${t('nestSub')}</span></button>
@@ -4339,6 +4390,7 @@ function groveReached() {
 let nestTab = 'up', nestPage = 0;
 function showNest() {
   mode = 'nest';
+  if (meta.tutorialDone && !meta.nestHinted) { meta.nestHinted = true; saveMeta(); } // the post-garden Nest hint has done its job
   if (nestTab === 'rep' && !repOpen()) nestTab = 'up';
   const items = NEST.map(u => {
     const lv = meta.up[u.k], maxed = lv >= u.max, cost = maxed ? 0 : u.cost[lv];
@@ -4382,7 +4434,7 @@ function showChallenges() {
       const action = claimed ? `<span class="done">${t('claimed')}</span>`
         : done ? `<button class="buy" data-act="claim" data-k="${c.id}">${t('claim')} ${SEED}${c.reward}</button>`
         : `<span class="done">${SEED.replace('<svg', '<svg width="12" height="12"')} ${c.reward}</span>`;
-      return `<div class="nrow"><div class="txt"><span class="t">${L(c.name)}</span><span class="d">${L(c.desc)} ${fmt(v)}/${fmt(c.goal)}</span>
+      return `<div class="nrow"><div class="txt"><span class="t">${L(c.name)}</span><span class="d">${t('chDesc')[c.id] || L(c.desc) + ' ' + fmt(v) + '/' + fmt(c.goal)}</span>
         <span class="prog"><i style="width:${v / c.goal * 100}%"></i></span></div>${action}</div>`;
     }).join('');
     body = `<div class="list">${rows}</div>
@@ -4606,19 +4658,20 @@ const COACH = {
 };
 
 /* ---------- First-time journey through the menus (right after the tutorial) ----------
-   One highlighted button at a time; everything else is blocked until the player presses it. */
+   Two highlighted taps: Adventure, then the first garden. The Nest is taught after the first garden (nestHintOn). */
 const JOURNEY = [
-  { screen: 'hub', sel: '[data-act="nest"]', en: 'Open the Nest to spend your seeds.', pt: 'Abra o Ninho para gastar suas sementes.' },
-  { screen: 'nest', sel: '[data-act="buy"][data-k="trail"]:not([disabled]),[data-act="buy"]:not([disabled])', en: 'Buy this upgrade: +1 trail space.', pt: 'Compre esta melhoria: +1 espaço na fila.' },
-  { screen: 'nest', sel: '[data-act="hub"],[data-act="nestback"]', en: 'Nice! Now let\'s play.', pt: 'Boa! Agora bora jogar.' },
   { screen: 'hub', sel: '[data-act="map"]', en: 'Start your adventure.', pt: 'Comece sua aventura.' },
   { screen: 'map', sel: '.node.cur', en: 'Tap the first garden.', pt: 'Toque no primeiro jardim.' },
-  { screen: 'prelevel', sel: '[data-act="go"]', en: 'Play!', pt: 'Jogar!' },
 ];
+// Saves from the old 6-step journey (nest, buy, back, map, garden, play) continue at the matching new step.
+function journeyMigrate() { if (meta.journeyV === 2) return; const j = meta.journey; meta.journeyV = 2; if (j >= 5) { meta.journeyDone = true; } else meta.journey = j === 4 ? 1 : 0; saveMeta(); }
+/** True after the first cleared garden until the player opens the Nest (only for players who never bought an upgrade). */
+const nestHintOn = () => !!meta && !!meta.tutorialDone && !meta.nestHinted && Object.values(meta.adv || {}).some(v => v > 0) && !Object.values(meta.up || {}).some(v => v > 0);
+const nestHintHtml = () => `<button class="chestbar nesthint" data-act="nest">${svg('nest', '#9fe3d4')}<div class="txt"><span class="t">${t('nestNew')}</span><span class="d">${t('nestNewD')}</span></div></button>`;
 const JOURNEY_E = [ // first Endless Run: choosing a path and picking skills
   { screen: 'runmap', sel: '.mnode.can', en: 'Pick your next stop. Each one is a garden or a reward.', pt: 'Escolha a próxima parada. Cada uma é um jardim ou um prêmio.' },
 ];
-const mainJ = () => meta && meta.journey != null && !meta.journeyDone;
+const mainJ = () => { if (meta && meta.journey != null && !meta.journeyDone && meta.journeyV !== 2) journeyMigrate(); return !!meta && meta.journey != null && !meta.journeyDone; };
 const JK = () => mainJ() ? 'journey' : 'ej';
 const JL = () => mainJ() ? JOURNEY : JOURNEY_E;
 const journeyOn = () => !!meta && !window.__noLearn && (mainJ() || (meta.ej != null && !meta.ejDone));
@@ -4742,16 +4795,14 @@ const TUT_MAP = [
   '#.......#',
   '#########',
 ];
-/* Tutorial = a fixed, scripted journey. Part 1 teaches the basics, part 2 a boss garden (keys, cage, golden gate).
+/* Tutorial = a fixed, scripted journey through the basics (the boss rules are taught by the boss intro card at 1-8).
    Each step waits for one exact action: the hero stops at every turn and only the right direction moves it on,
    and nothing else on the board moves while it waits. */
 const TUTX = {
   en: { s0: 'Free the sprout: roll to the bubble.', s1: 'Bring it into the portal of its color.', s2: 'Grab the seed. Seeds buy upgrades.', s3: 'A pest! Grab the snowflake.', s4: 'It\'s frozen. Bump it!', s5: 'It went to the den to nap.',
-        b0: 'Boss garden! Each portal gives a key.', b1: 'Into its portal: key 1!', b2: 'Now the blue sprout.', b3: 'Into the blue portal: key 2!', b4: 'The cage opened! Free the Golden Sprout.', b5: 'Bring it to the golden gate to win!',
-        swipe: 'Swipe', press: 'Press', part2: 'Part 2: boss garden', done: 'Tutorial complete!', doneP: 'Here are 40 seeds. Let\'s spend them!', go: 'Let\'s go!' },
+        swipe: 'Swipe', press: 'Press', done: 'Tutorial complete!', doneP: 'Here are 40 seeds!', go: 'Let\'s go!' },
   pt: { s0: 'Solte o brotinho: role até a bolha.', s1: 'Leve ele ao portal da mesma cor.', s2: 'Pegue a semente. Sementes compram melhorias.', s3: 'Uma praga! Pegue o floco de neve.', s4: 'Congelou. Encoste nela!', s5: 'Ela foi tirar soneca na toca.',
-        b0: 'Jardim do chefe! Cada portal dá uma chave.', b1: 'Para o portal dele: chave 1!', b2: 'Agora o brotinho azul.', b3: 'Para o portal azul: chave 2!', b4: 'A gaiola abriu! Solte o Broto Dourado.', b5: 'Leve ele ao portão dourado para vencer!',
-        swipe: 'Deslize', press: 'Aperte', part2: 'Parte 2: jardim do chefe', done: 'Tutorial concluído!', doneP: 'Tome 40 sementes. Bora gastar!', go: 'Bora!' },
+        swipe: 'Deslize', press: 'Aperte', done: 'Tutorial concluído!', doneP: 'Tome 40 sementes!', go: 'Bora!' },
 };
 const TX = k => (TUTX[LANG] || TUTX.en)[k] ?? TUTX.en[k];
 function tutReset(part) {
@@ -4764,16 +4815,9 @@ function tutReset(part) {
   enemies = []; pickups = []; shots = []; particles = []; floats = []; banners = [];
   run.den = { x: 4, y: 3 }; run.part = part; run.gate = null;
   freezeT = 0; invuln = 0;
-  if (part === 1) {
-    portals = [{ x: 7, y: 1, cs: [0] }];
-    bubbles = [{ x: 7, y: 9, c: 0, bob: 0 }];
-    run.boss = false;
-  } else {
-    portals = [{ x: 7, y: 1, cs: [0] }, { x: 1, y: 1, cs: [1] }, { x: 1, y: 9, cs: [4], golden: true, active: false }];
-    bubbles = [{ x: 7, y: 9, c: 0, bob: 0 }, { x: 4, y: 1, c: 1, bob: 1 }, { x: 4, y: 5, c: 4, gold: true, locked: true, bob: 2 }];
-    run.boss = true; run.bossType = 'king'; run.keys = 0; run.bossDone = false; run.goldNeed = 1; run.goldSaved = 0;
-    run.cages = [{ x: 4, y: 5 }]; run.cage = run.cages[0];
-  }
+  portals = [{ x: 7, y: 1, cs: [0] }];
+  bubbles = [{ x: 7, y: 9, c: 0, bob: 0 }];
+  run.boss = false;
   fit(); snapCam(); updateHud();
 }
 function startTutorial() {
@@ -4795,18 +4839,11 @@ const TUT_STEPS = [
       if (!pickups.some(k => k.type === 'frost')) pickups.push({ x: 1, y: 5, life: 9999, type: 'frost' }); } },
   { tip: 's4', target: () => enemies[0] && !(enemies[0].denT > 0) ? epos(enemies[0]) : null, done: () => (run.pops || 0) > 0, back: () => freezeT <= 0 ? 3 : -1, enter() { freezeT = Math.max(freezeT, 30); } },
   { tip: 's5', target: () => run.den, wait: 3 },
-  { tip: 'b0', target: () => bubbles.find(b => b.c === 0), done: () => followers.some(f => f.c === 0), part: 2 },
-  { tip: 'b1', target: () => portals[0], done: () => run.keys >= 1 },
-  { tip: 'b2', target: () => bubbles.find(b => b.c === 1), done: () => followers.some(f => f.c === 1) },
-  { tip: 'b3', target: () => portals[1], done: () => run.keys >= 2 },
-  { tip: 'b4', target: () => bubbles.find(b => b.gold), done: () => followers.some(f => f.gold) },
-  { tip: 'b5', target: () => portals[2], done: () => run.goldSaved >= 1 },
 ];
 const isTouch = () => navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
 const kbMode = () => kbUser || !isTouch();
 function tutStep(n) {
   const st = TUT_STEPS[n]; if (!st) { finishTutorial(true); return; }
-  if (st.part === 2 && run.part !== 2) { tutReset(2); banner(TX('part2'), '#f5b82e', 'crown'); }
   run.tut = n; run.tutT = time; run.gate = null;
   if (st.enter) st.enter();
   setTip(`${n + 1}/${TUT_STEPS.length} · ${TX(st.tip)}`);
@@ -4915,7 +4952,7 @@ async function cloudProbe() {
 }
 function cloudBox() {
   const on = cloud.state === 'on';
-  if (!on && cloud.can === false) return `<div class="cloudbox"><p>${LANG === 'pt' ? 'Seu progresso fica neste aparelho. Para levar a outro, use Perfil → Copiar código.' : 'Your progress stays on this device. To move it, use Profile → Copy code.'}</p></div>`;
+  if (!on && cloud.can === false) return `<div class="cloudbox"><p>${t('saveHere')}</p></div>`;
   return `<div class="cloudbox"><p id="cloudMsg">${on ? CLt('on') : cloud.state === 'off' ? CLt('offer') : cloudLine()}</p>${on ? '' : `<button class="btn ghost small" data-act="cloudconnect">${CLt('connect')}</button>`}</div>`;
 }
 const saveSummary = m => { const gs = Object.keys(m.adv || {}).map(id => +id.split('-')[0]); return `${t('grove')} ${gs.length ? Math.max(...gs) : 1} · ${fmt(m.coins || 0)} ${LANG === 'pt' ? 'sementes' : 'seeds'}`; };
@@ -4937,7 +4974,7 @@ function finishTutorial(done) {
   setTip(null);
   meta.tutorialDone = true;
   if (done && !meta.tutReward) { meta.tutReward = true; meta.coins += 40; }
-  if (done && !meta.journeyDone && meta.journey == null) { meta.journey = 0; meta.coach = Object.assign(meta.coach || {}, { hub: 1, map: 1, prelevel: 1 }); }
+  if (done && !meta.journeyDone && meta.journey == null) { meta.journey = 0; meta.journeyV = 2; meta.coach = Object.assign(meta.coach || {}, { hub: 1, map: 1, prelevel: 1 }); }
   saveMeta();
   show(`<div class="card"><div class="eyebrow">${t('tutorial')}</div><h2>${done ? TX('done') : t('tutorial')}</h2>
     <div style="display:flex;justify-content:center">${avatar(meta.char, 64, null, 'cheer')}</div>
@@ -5670,6 +5707,11 @@ addEventListener('keydown', e => {
   if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { if (mode === 'pause') resume(); }
 });
 document.getElementById('pauseBtn').addEventListener('click', () => { if (mode === 'play') pauseGame(); else if (mode === 'pause') resume(); });
+// Hub save chip: the existing account box (or, where accounts can't work here, the save-code section in Profile).
+document.getElementById('saveChip').addEventListener('click', () => {
+  if (mode !== 'hub') return; initAudio(); sfx('tap');
+  if (cloud.can === false) { showProfile(); const s = document.getElementById('saveStatus'); if (s) s.scrollIntoView({ block: 'center' }); } else showCloudOffer();
+});
 document.getElementById('soundBtn').addEventListener('click', () => {
   muted = !muted; initAudio();
   document.getElementById('soundWave').style.opacity = muted ? '0' : '1';
@@ -5748,7 +5790,6 @@ idbRestore();
 function uiScale() { const z = Math.max(1, Math.min(1.75, Math.round(Math.min(innerWidth / 440, innerHeight / 860) * 20) / 20)); document.documentElement.style.setProperty('--uiz', z); }
 uiScale(); addEventListener('resize', uiScale);
 if ('ResizeObserver' in window) new ResizeObserver(fit).observe(boardEl); else addEventListener('resize', fit);
-document.documentElement.dataset.theme = 'moss'; // menus use the Night forest palette
 setTimeout(cloudProbe, 0);
 if (meta.cloudOn) setTimeout(() => { cloudConnect(false).then(st => { if (st === 'choose' && (mode === 'hub' || mode === 'splash')) { showCloudChoice(); return; } if (cloud.pulled) { cloud.pulled = false; if (mode === 'hub') showHub(); else if (mode === 'splash') showSplash(); } }); }, 0); // only for players who connected before
 showSplash();

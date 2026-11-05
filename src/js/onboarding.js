@@ -55,19 +55,20 @@ const COACH = {
 };
 
 /* ---------- First-time journey through the menus (right after the tutorial) ----------
-   One highlighted button at a time; everything else is blocked until the player presses it. */
+   Two highlighted taps: Adventure, then the first garden. The Nest is taught after the first garden (nestHintOn). */
 const JOURNEY = [
-  { screen: 'hub', sel: '[data-act="nest"]', en: 'Open the Nest to spend your seeds.', pt: 'Abra o Ninho para gastar suas sementes.' },
-  { screen: 'nest', sel: '[data-act="buy"][data-k="trail"]:not([disabled]),[data-act="buy"]:not([disabled])', en: 'Buy this upgrade: +1 trail space.', pt: 'Compre esta melhoria: +1 espaço na fila.' },
-  { screen: 'nest', sel: '[data-act="hub"],[data-act="nestback"]', en: 'Nice! Now let\'s play.', pt: 'Boa! Agora bora jogar.' },
   { screen: 'hub', sel: '[data-act="map"]', en: 'Start your adventure.', pt: 'Comece sua aventura.' },
   { screen: 'map', sel: '.node.cur', en: 'Tap the first garden.', pt: 'Toque no primeiro jardim.' },
-  { screen: 'prelevel', sel: '[data-act="go"]', en: 'Play!', pt: 'Jogar!' },
 ];
+// Saves from the old 6-step journey (nest, buy, back, map, garden, play) continue at the matching new step.
+function journeyMigrate() { if (meta.journeyV === 2) return; const j = meta.journey; meta.journeyV = 2; if (j >= 5) { meta.journeyDone = true; } else meta.journey = j === 4 ? 1 : 0; saveMeta(); }
+/** True after the first cleared garden until the player opens the Nest (only for players who never bought an upgrade). */
+const nestHintOn = () => !!meta && !!meta.tutorialDone && !meta.nestHinted && Object.values(meta.adv || {}).some(v => v > 0) && !Object.values(meta.up || {}).some(v => v > 0);
+const nestHintHtml = () => `<button class="chestbar nesthint" data-act="nest">${svg('nest', '#9fe3d4')}<div class="txt"><span class="t">${t('nestNew')}</span><span class="d">${t('nestNewD')}</span></div></button>`;
 const JOURNEY_E = [ // first Endless Run: choosing a path and picking skills
   { screen: 'runmap', sel: '.mnode.can', en: 'Pick your next stop. Each one is a garden or a reward.', pt: 'Escolha a próxima parada. Cada uma é um jardim ou um prêmio.' },
 ];
-const mainJ = () => meta && meta.journey != null && !meta.journeyDone;
+const mainJ = () => { if (meta && meta.journey != null && !meta.journeyDone && meta.journeyV !== 2) journeyMigrate(); return !!meta && meta.journey != null && !meta.journeyDone; };
 const JK = () => mainJ() ? 'journey' : 'ej';
 const JL = () => mainJ() ? JOURNEY : JOURNEY_E;
 const journeyOn = () => !!meta && !window.__noLearn && (mainJ() || (meta.ej != null && !meta.ejDone));
@@ -191,16 +192,14 @@ const TUT_MAP = [
   '#.......#',
   '#########',
 ];
-/* Tutorial = a fixed, scripted journey. Part 1 teaches the basics, part 2 a boss garden (keys, cage, golden gate).
+/* Tutorial = a fixed, scripted journey through the basics (the boss rules are taught by the boss intro card at 1-8).
    Each step waits for one exact action: the hero stops at every turn and only the right direction moves it on,
    and nothing else on the board moves while it waits. */
 const TUTX = {
   en: { s0: 'Free the sprout: roll to the bubble.', s1: 'Bring it into the portal of its color.', s2: 'Grab the seed. Seeds buy upgrades.', s3: 'A pest! Grab the snowflake.', s4: 'It\'s frozen. Bump it!', s5: 'It went to the den to nap.',
-        b0: 'Boss garden! Each portal gives a key.', b1: 'Into its portal: key 1!', b2: 'Now the blue sprout.', b3: 'Into the blue portal: key 2!', b4: 'The cage opened! Free the Golden Sprout.', b5: 'Bring it to the golden gate to win!',
-        swipe: 'Swipe', press: 'Press', part2: 'Part 2: boss garden', done: 'Tutorial complete!', doneP: 'Here are 40 seeds. Let\'s spend them!', go: 'Let\'s go!' },
+        swipe: 'Swipe', press: 'Press', done: 'Tutorial complete!', doneP: 'Here are 40 seeds!', go: 'Let\'s go!' },
   pt: { s0: 'Solte o brotinho: role até a bolha.', s1: 'Leve ele ao portal da mesma cor.', s2: 'Pegue a semente. Sementes compram melhorias.', s3: 'Uma praga! Pegue o floco de neve.', s4: 'Congelou. Encoste nela!', s5: 'Ela foi tirar soneca na toca.',
-        b0: 'Jardim do chefe! Cada portal dá uma chave.', b1: 'Para o portal dele: chave 1!', b2: 'Agora o brotinho azul.', b3: 'Para o portal azul: chave 2!', b4: 'A gaiola abriu! Solte o Broto Dourado.', b5: 'Leve ele ao portão dourado para vencer!',
-        swipe: 'Deslize', press: 'Aperte', part2: 'Parte 2: jardim do chefe', done: 'Tutorial concluído!', doneP: 'Tome 40 sementes. Bora gastar!', go: 'Bora!' },
+        swipe: 'Deslize', press: 'Aperte', done: 'Tutorial concluído!', doneP: 'Tome 40 sementes!', go: 'Bora!' },
 };
 const TX = k => (TUTX[LANG] || TUTX.en)[k] ?? TUTX.en[k];
 function tutReset(part) {
@@ -213,16 +212,9 @@ function tutReset(part) {
   enemies = []; pickups = []; shots = []; particles = []; floats = []; banners = [];
   run.den = { x: 4, y: 3 }; run.part = part; run.gate = null;
   freezeT = 0; invuln = 0;
-  if (part === 1) {
-    portals = [{ x: 7, y: 1, cs: [0] }];
-    bubbles = [{ x: 7, y: 9, c: 0, bob: 0 }];
-    run.boss = false;
-  } else {
-    portals = [{ x: 7, y: 1, cs: [0] }, { x: 1, y: 1, cs: [1] }, { x: 1, y: 9, cs: [4], golden: true, active: false }];
-    bubbles = [{ x: 7, y: 9, c: 0, bob: 0 }, { x: 4, y: 1, c: 1, bob: 1 }, { x: 4, y: 5, c: 4, gold: true, locked: true, bob: 2 }];
-    run.boss = true; run.bossType = 'king'; run.keys = 0; run.bossDone = false; run.goldNeed = 1; run.goldSaved = 0;
-    run.cages = [{ x: 4, y: 5 }]; run.cage = run.cages[0];
-  }
+  portals = [{ x: 7, y: 1, cs: [0] }];
+  bubbles = [{ x: 7, y: 9, c: 0, bob: 0 }];
+  run.boss = false;
   fit(); snapCam(); updateHud();
 }
 function startTutorial() {
@@ -244,18 +236,11 @@ const TUT_STEPS = [
       if (!pickups.some(k => k.type === 'frost')) pickups.push({ x: 1, y: 5, life: 9999, type: 'frost' }); } },
   { tip: 's4', target: () => enemies[0] && !(enemies[0].denT > 0) ? epos(enemies[0]) : null, done: () => (run.pops || 0) > 0, back: () => freezeT <= 0 ? 3 : -1, enter() { freezeT = Math.max(freezeT, 30); } },
   { tip: 's5', target: () => run.den, wait: 3 },
-  { tip: 'b0', target: () => bubbles.find(b => b.c === 0), done: () => followers.some(f => f.c === 0), part: 2 },
-  { tip: 'b1', target: () => portals[0], done: () => run.keys >= 1 },
-  { tip: 'b2', target: () => bubbles.find(b => b.c === 1), done: () => followers.some(f => f.c === 1) },
-  { tip: 'b3', target: () => portals[1], done: () => run.keys >= 2 },
-  { tip: 'b4', target: () => bubbles.find(b => b.gold), done: () => followers.some(f => f.gold) },
-  { tip: 'b5', target: () => portals[2], done: () => run.goldSaved >= 1 },
 ];
 const isTouch = () => navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
 const kbMode = () => kbUser || !isTouch();
 function tutStep(n) {
   const st = TUT_STEPS[n]; if (!st) { finishTutorial(true); return; }
-  if (st.part === 2 && run.part !== 2) { tutReset(2); banner(TX('part2'), '#f5b82e', 'crown'); }
   run.tut = n; run.tutT = time; run.gate = null;
   if (st.enter) st.enter();
   setTip(`${n + 1}/${TUT_STEPS.length} · ${TX(st.tip)}`);
@@ -364,7 +349,7 @@ async function cloudProbe() {
 }
 function cloudBox() {
   const on = cloud.state === 'on';
-  if (!on && cloud.can === false) return `<div class="cloudbox"><p>${LANG === 'pt' ? 'Seu progresso fica neste aparelho. Para levar a outro, use Perfil → Copiar código.' : 'Your progress stays on this device. To move it, use Profile → Copy code.'}</p></div>`;
+  if (!on && cloud.can === false) return `<div class="cloudbox"><p>${t('saveHere')}</p></div>`;
   return `<div class="cloudbox"><p id="cloudMsg">${on ? CLt('on') : cloud.state === 'off' ? CLt('offer') : cloudLine()}</p>${on ? '' : `<button class="btn ghost small" data-act="cloudconnect">${CLt('connect')}</button>`}</div>`;
 }
 const saveSummary = m => { const gs = Object.keys(m.adv || {}).map(id => +id.split('-')[0]); return `${t('grove')} ${gs.length ? Math.max(...gs) : 1} · ${fmt(m.coins || 0)} ${LANG === 'pt' ? 'sementes' : 'seeds'}`; };
@@ -386,7 +371,7 @@ function finishTutorial(done) {
   setTip(null);
   meta.tutorialDone = true;
   if (done && !meta.tutReward) { meta.tutReward = true; meta.coins += 40; }
-  if (done && !meta.journeyDone && meta.journey == null) { meta.journey = 0; meta.coach = Object.assign(meta.coach || {}, { hub: 1, map: 1, prelevel: 1 }); }
+  if (done && !meta.journeyDone && meta.journey == null) { meta.journey = 0; meta.journeyV = 2; meta.coach = Object.assign(meta.coach || {}, { hub: 1, map: 1, prelevel: 1 }); }
   saveMeta();
   show(`<div class="card"><div class="eyebrow">${t('tutorial')}</div><h2>${done ? TX('done') : t('tutorial')}</h2>
     <div style="display:flex;justify-content:center">${avatar(meta.char, 64, null, 'cheer')}</div>
