@@ -1,0 +1,7 @@
+{
+  "name": "sprout-patrol",
+  "private": true,
+  "description": "Test tooling only. The game ships as one html file with no runtime dependencies.",
+  "scripts": { "test": "bash tests/run.sh" },
+  "devDependencies": { "playwright": "^1.50.0" }
+}

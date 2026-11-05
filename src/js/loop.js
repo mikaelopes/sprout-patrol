@@ -21,6 +21,7 @@ const tutSkipEl = document.getElementById('tutSkip');
 tutSkipEl.addEventListener('click', e => { e.stopPropagation(); skipTutorial(); });
 function frame(now) {
   requestAnimationFrame(frame);
+  if (TEST.fast) return;
   { const on = !!(run && run.kind === 'tutorial' && (mode === 'play' || mode === 'pause')); if (tutSkipEl.hidden === on) { tutSkipEl.hidden = !on; tutSkipEl.textContent = LANG === 'pt' ? 'Pular tutorial' : 'Skip tutorial'; } }
   try { step(now); } catch (err) {
     console.error(err);
@@ -55,7 +56,7 @@ function step(now) {
     cam.x += (camT.x - cam.x) * k; cam.y += (camT.y - cam.y) * k;
   }
   updateFx(dt);
-  draw();
+  if (!TEST.fast) draw();
   animAvatars();
   updateMusic();
 }

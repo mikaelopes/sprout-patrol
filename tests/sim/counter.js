@@ -129,4 +129,5 @@ const PAGE = process.argv[2] || 'tests/sim/game_fast.html', OUT = process.argv[3
   const fail = R.filter(r => !r.pass);
   console.log(R.length, 'cells,', fail.length, 'failing'); fail.forEach(r => console.log('FAIL', r.foe, r.state, r.tool, JSON.stringify(r.exp), '→', JSON.stringify(r.got)));
   console.log(errs.slice(0, 5)); await b.close();
+  process.exit(fail.length || errs.length ? 1 : 0);
 })();

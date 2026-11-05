@@ -683,6 +683,8 @@ html[data-theme="moss"] .card h1,html[data-theme="night"] .card h1,html[data-the
 
 <script>
 (() => {
+// Test switches. Always {} in the shipped build; src/test/hook.js (build.py --test) fills it for the Playwright gate.
+const TEST = {};
 const PER_GROVE = 4;
 let COLS = 11, ROWS = 15, START = { x: 5, y: 7 };
 const COLORS = [
@@ -1025,6 +1027,11 @@ let meta = {
   claimed: {}, adv: {}, discovered: {},
 };
 const META_DEFAULT = JSON.stringify(meta);
+// Version of the saved Endless run (meta.savedRun). Bump it whenever a run.* field is renamed or its meaning changes:
+// a saved run with another version is dropped on load (quietly), and progress (meta) is always kept.
+const RUN_V = 1;
+const isObj = o => !!o && typeof o === 'object' && !Array.isArray(o);
+function savedRunOk(sv) { return isObj(sv) && sv.v === RUN_V && isObj(sv.run) && sv.run.kind === 'endless' && Number.isFinite(sv.run.garden) && isObj(sv.sk) && isObj(sv.wp) && isObj(sv.evo); }
 // Tutorials, guided steps, learn cards and boss intros are shown once per player: whatever save wins, the "seen" flags are kept.
 function mergeSeen(into, from) {
   if (!into || !from) return into;
@@ -1076,6 +1083,7 @@ function applySave(saved) {
   mergeSeen(meta, prev); migrateCuts(meta); migrateNest2(meta);
   if (!CHARS[meta.char] || !meta.owned[meta.char]) meta.char = 'pip';
   if (!MODES[meta.mode]) meta.mode = 'normal';
+  if (meta.savedRun && !savedRunOk(meta.savedRun)) delete meta.savedRun; // only the run is dropped, never progress
 }
 // Some browsers (Safari, private windows, strict tracking protection) block or wipe storage for pages shown inside
 // claude.ai, so the game checks whether the browser actually keeps data and offers a cloud save and a save code.
@@ -1159,7 +1167,9 @@ const inClaude = () => !!(window.claude && window.claude.use);
 const cloudHost = () => inClaude() ? 'claude' : FB.apiKey ? 'firebase' : null;
 const acctName = () => cloudHost() === 'firebase' ? 'Google' : 'Claude';
 const fb = { ready: null, m: null, app: null, auth: null, db: null };
-function fbLoad() { // loaded once at boot so the sign-in popup opens straight from the tap (popup blockers need that)
+// Loads the Firebase SDK. Only called after the player opted in: on the first Connect tap, or at boot when meta.cloudOn is already true.
+// Loading it before the sign-in tap keeps the popup directly inside the second tap (popup blockers need that).
+function fbLoad() {
   if (fb.ready) return fb.ready;
   const base = 'https://www.gstatic.com/firebasejs/' + FB_V + '/';
   fb.ready = (window.__fbMock ? Promise.resolve(window.__fbMock) : Promise.all(['firebase-app', 'firebase-auth', 'firebase-firestore'].map(n => import(base + n + '.js'))).then(([a, u, f]) => ({ ...a, ...u, ...f })))
@@ -1182,11 +1192,12 @@ async function fbRef(interactive) {
 }
 const CL = {
   en: { offer: 'Keep your progress in your Claude account?', connect: 'Connect account', later: 'Not now', on: '✓ Saved to your Claude account.', off: 'Account not connected.',
-        signedOut: 'Sign in to Claude to save to your account.', readonly: 'This link can\'t save to accounts. Use your save code.', working: 'Connecting…', disconnect: 'Disconnect', pulled: 'Loaded your account save.' },
+        signedOut: 'Sign in to Claude to save to your account.', readonly: 'This link can\'t save to accounts. Use your save code.', working: 'Connecting…', loading: 'Loading…', disconnect: 'Disconnect', pulled: 'Loaded your account save.' },
   pt: { offer: 'Guardar seu progresso na sua conta Claude?', connect: 'Conectar conta', later: 'Agora não', on: '✓ Salvo na sua conta Claude.', off: 'Conta não conectada.',
-        signedOut: 'Entre no Claude para salvar na conta.', readonly: 'Este link não salva em contas. Use seu código.', working: 'Conectando…', disconnect: 'Desconectar', pulled: 'Save da sua conta carregado.' },
+        signedOut: 'Entre no Claude para salvar na conta.', readonly: 'Este link não salva em contas. Use seu código.', working: 'Conectando…', loading: 'Carregando…', disconnect: 'Desconectar', pulled: 'Save da sua conta carregado.' },
 };
-const CLt = k => (k === 'connect' && cloudHost() === 'firebase') ? (LANG === 'pt' ? 'Entrar com Google' : 'Sign in with Google') : (CL[LANG] || CL.en)[k].replace('Claude', acctName()).replace('Sign in to Google to save to your account.', 'Google sign-in didn\'t finish. Try again.').replace('Entre no Google para salvar na conta.', 'O login do Google não terminou. Tente de novo.');
+// With Firebase the button reads Connect until the SDK is loaded (first tap), then Sign in with Google (second tap).
+const CLt = k => (k === 'connect' && cloudHost() === 'firebase' && fb.m) ? (LANG === 'pt' ? 'Entrar com Google' : 'Sign in with Google') : (CL[LANG] || CL.en)[k].replace('Claude', acctName()).replace('Sign in to Google to save to your account.', 'Google sign-in didn\'t finish. Try again.').replace('Entre no Google para salvar na conta.', 'O login do Google não terminou. Tente de novo.');
 function cloudJson() { // one document, max 256 KiB: drop the oldest play-log entries if needed
   const m = { ...meta }; let j = JSON.stringify(m);
   while (j.length > 240000 && m.log && m.log.length > 20) { m.log = m.log.slice(Math.floor(m.log.length / 4)); j = JSON.stringify(m); }
@@ -4896,7 +4907,7 @@ function skipTutorial() {
 // Only people who can write this artifact's data (the owner; Team members at Contributor) can save to an account.
 // Everyone else never sees a Connect button that can't work: they get the save-code tip instead. can() asks nothing of the viewer.
 async function cloudProbe() {
-  if (cloudHost() === 'firebase') { cloud.can = true; fbLoad().catch(() => { cloud.can = false; const bx = overlay.querySelector('.cloudbox'); if (bx) bx.outerHTML = cloudBox(); }); return; }
+  if (cloudHost() === 'firebase') { cloud.can = true; return; } // the SDK loads on the first Connect tap, never at boot
   try { const user = window.claude && window.claude.use ? await window.claude.use('user') : null; cloud.can = user ? await user.can('data.write') : false; }
   catch (e) { cloud.can = false; }
   if (cloud.can === false && (mode === 'tutdone' || mode === 'profile')) { const bx = overlay.querySelector('.cloudbox'); if (bx) bx.outerHTML = cloudBox(); }
@@ -4938,12 +4949,12 @@ function finishTutorial(done) {
 // Endless runs are saved at the start of every garden, so a closed tab or a reload can continue the run.
 function saveRun() {
   if (!run || run.kind !== 'endless') return;
-  try { meta.savedRun = JSON.parse(JSON.stringify({ v: 1, at: Date.now(), run, sk, wp, evo })); saveMeta(); } catch (e) {}
+  try { meta.savedRun = JSON.parse(JSON.stringify({ v: RUN_V, at: Date.now(), run, sk, wp, evo })); saveMeta(); } catch (e) {}
 }
 function clearRun() { if (meta.savedRun) { delete meta.savedRun; saveMeta(); } }
 function continueRun() {
   const sv = meta.savedRun;
-  if (!sv || !sv.run) return false;
+  if (!savedRunOk(sv)) { if (sv) clearRun(); return false; }
   freshRun();
   sk = { ...sk, ...sv.sk }; wp = { ...wp, ...sv.wp }; evo = { ...evo, ...sv.evo };
   for (const k in sk) if (!SKILLS[k]) delete sk[k]; for (const k in wp) if (!WEAPONS[k]) delete wp[k]; for (const k in evo) if (!EVO2[k] && !EVOS[k]) delete evo[k];
@@ -5111,6 +5122,7 @@ function chestPrompt() {
 }
 function advResult(won, quit) {
   mode = 'advresult';
+  if (TEST.onResult) TEST.onResult(won, quit);
   if (run.daily) { dailyResult(won, quit); return; }
   const { g, i } = run.adv;
   const earned = run.coins;
@@ -5533,6 +5545,10 @@ overlay.addEventListener('click', e => {
   else if (act === 'chpage') { chPage += +k; showChallenges(); }
   else if (act === 'profile') showProfile();
   else if (act === 'quiz') startQuiz();
+  else if (act === 'cloudconnect' && cloudHost() === 'firebase' && !fb.m) { // first tap: load the SDK now that the player opted in; the next tap signs in
+    const msg = document.getElementById('cloudMsg'); if (msg) msg.textContent = CLt('loading'); b.disabled = true;
+    fbLoad().then(f => f.auth.authStateReady ? f.auth.authStateReady() : 0).then(() => { b.textContent = CLt('connect'); b.disabled = false; const m2 = document.getElementById('cloudMsg'); if (m2) m2.textContent = CLt('offer'); })
+      .catch(() => { cloud.state = 'signedOut'; b.disabled = false; const m2 = document.getElementById('cloudMsg'); if (m2) m2.textContent = cloudLine(); }); }
   else if (act === 'cloudconnect') { const msg = document.getElementById('cloudMsg'); if (msg) msg.textContent = CLt('working'); b.disabled = true;
     cloudConnect().then(st => { if (st === 'choose') { showCloudChoice(); return; } if (cloud.pulled) { cloud.pulled = false; banner(CLt('pulled'), '#5cbf3a', 'star'); showHub(); return; }
       if (mode === 'profile') { showProfile(); return; } const m2 = document.getElementById('cloudMsg'); if (m2) m2.textContent = cloudLine(); if (st === 'on' || st === 'readonly') b.remove(); else b.disabled = false; }); }
@@ -5685,6 +5701,7 @@ const tutSkipEl = document.getElementById('tutSkip');
 tutSkipEl.addEventListener('click', e => { e.stopPropagation(); skipTutorial(); });
 function frame(now) {
   requestAnimationFrame(frame);
+  if (TEST.fast) return;
   { const on = !!(run && run.kind === 'tutorial' && (mode === 'play' || mode === 'pause')); if (tutSkipEl.hidden === on) { tutSkipEl.hidden = !on; tutSkipEl.textContent = LANG === 'pt' ? 'Pular tutorial' : 'Skip tutorial'; } }
   try { step(now); } catch (err) {
     console.error(err);
@@ -5719,7 +5736,7 @@ function step(now) {
     cam.x += (camT.x - cam.x) * k; cam.y += (camT.y - cam.y) * k;
   }
   updateFx(dt);
-  draw();
+  if (!TEST.fast) draw();
   animAvatars();
   updateMusic();
 }

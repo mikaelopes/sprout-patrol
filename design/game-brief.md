@@ -24,7 +24,7 @@
 - Multiplayer, chat, ads, real-money purchases
 - A native app or a game engine port (it stays one html file)
 - A fifth fruit colour (tested: harder in the bad way, not colour-blind safe)
-- Any network use before the player opts in to cloud save
+- Any network use before the player opts in, except the game font
 
 ## Build order
 1. Keep the core loop and save safe (tests/run.sh green) on every change.
