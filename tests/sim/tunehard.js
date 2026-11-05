@@ -9,7 +9,7 @@ const goal = G => Math.min(5, Math.floor(G / 2));
   const ev = async (G, mult, hne) => { const jobs = []; for (let n = 0; n < N; n++) jobs.push(5151 + n * 7919); let w = 0, t = 0, tot = 0;
     await Promise.all(pages.map(async p => { while (jobs.length) { const seed = jobs.shift();
       const r = await p.evaluate(({ G, L, cfg, seed, mult, hne }) => { const T = window.__g, m = T.meta; T.BAL.gs.h[G - 1] = mult; T.BAL.hne[G - 1] = hne;
-        m.tutorialDone = true; m.journeyDone = true; m.journey = 6; m.log = []; m.char = 'pip'; m.up = { ...m.up, trail: L, speed: L, heart: Math.min(L, 3), frost: L }; m.gear = {}; m.gearOn = [];
+        m.tutorialDone = true; m.journeyDone = true; m.journey = 6; m.log = []; m.char = 'pip'; m.up = { ...m.up, trail: L, speed: Math.ceil(L / 2), heart: Math.min(L, 3), frost: L }; m.gear = {}; m.gearOn = [];
         return window.__bot.play(G, 4, cfg, seed); }, { G, L: goal(G), cfg: CASUAL, seed, mult, hne });
       tot++; if (r.won) { w++; t += r.t; } } }));
     return { w: w / tot, t: w ? t / w / 60 : 0 }; };

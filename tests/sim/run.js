@@ -19,7 +19,7 @@ for (const tier of tiersArg.split(',')) for (const L of nestArg.split(',').map(N
       if (++uses > 150) { await p.close(); p = await b.newPage(); await p.setContent(html); await p.waitForTimeout(300); await p.addScriptTag({ content: bot }); uses = 0; }
       const [g, i] = j.gid.split('-').map(Number);
       let r;
-      try { r = await p.evaluate(({ g, i, L, cfg, seed }) => { const m = window.__g.meta; m.tutorialDone = true; m.journeyDone = true; m.journey = 6; m.log = []; m.up = { ...m.up, trail: L, speed: L, heart: L, frost: 0 }; return window.__bot.play(g, i, cfg, seed); }, { g, i, L: j.L, cfg: TIERS[j.tier], seed: j.seed }); }
+      try { r = await p.evaluate(({ g, i, L, cfg, seed }) => { const m = window.__g.meta; m.tutorialDone = true; m.journeyDone = true; m.journey = 6; m.log = []; m.up = { ...m.up, trail: L, speed: Math.ceil(L / 2), heart: L, frost: 0 }; return window.__bot.play(g, i, cfg, seed); }, { g, i, L: j.L, cfg: TIERS[j.tier], seed: j.seed }); }
       catch (e) { r = { error: String(e).slice(0, 120) }; }
       fs.writeSync(fd, JSON.stringify({ ...j, ...r }) + '\n'); done++;
       if (done % 200 === 0) console.log(done, 'done', ((Date.now() - t0) / 1000).toFixed(0) + 's');

@@ -62,8 +62,10 @@ const EVOS = {
 const NEST = [
   { k: 'trail', name: { en: 'Long Burrow', pt: 'Toca Comprida' }, max: 10, cost: [40,  240,  290,  345,  415,  500,  595,  715,  860,  1030], gate: [1,  2,  3,  4,  5,  6,  7,  8,  10,  11],
     desc: lv => lv % 2 === 0 ? { en: '+1 trail space.', pt: '+1 espaço na fila.' } : { en: '+1 line guard: blocks a trail break each garden.', pt: '+1 guarda: bloqueia uma quebra da fila por jardim.' } },
-  { k: 'speed', name: { en: 'Quick Feet', pt: 'Pés Ligeiros' }, max: 10, cost: [200,  240,  290,  345,  415,  500,  595,  715,  860,  1030], gate: [1,  2,  3,  4,  5,  6,  7,  9,  10,  12],
-    desc: lv => ({ en: `Roll faster: ${num(nestSpeedAt(lv),2)} → ${num(nestSpeedAt(lv + 1),2)} tiles/s.`, pt: `Role mais rápido: ${num(nestSpeedAt(lv),2)} → ${num(nestSpeedAt(lv + 1),2)} casas/s.` }) },
+  // P6 (design/revamp/gameplay-levels.md): 5 felt steps; each cost/gate is a pair of the old 10 levels. Old saves: migrateQuick in save.js.
+  { k: 'speed', name: { en: 'Quick Feet', pt: 'Pés Ligeiros' }, max: 5, cost: [440,  635,  915,  1310,  1890], gate: [1,  3,  5,  7,  10],
+    desc: lv => { const a = nestSpeedAt(lv), b = nestSpeedAt(lv + 1), pc = Math.round((b / a - 1) * 100);
+      return { en: `Roll faster: ${num(a,2)} → ${num(b,2)} (+${pc}%)`, pt: `Role mais rápido: ${num(a,2)} → ${num(b,2)} (+${pc}%)` }; } },
   { k: 'heart', name: { en: 'Sturdy Nest', pt: 'Ninho Firme' }, max: 10, cost: [200,  240,  290,  345,  415,  500,  595,  715,  860,  1030], gate: [1,  2,  3,  4,  5,  6,  8,  9,  11,  12],
     desc: lv => nestHearts(lv + 1) > nestHearts(lv) ? { en: '+1 heart in every garden.', pt: '+1 coração em todo jardim.' } : { en: '+0.3 s of safety after a hit.', pt: '+0,3 s de proteção depois de um golpe.' } },
 ]

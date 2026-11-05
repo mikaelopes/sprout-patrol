@@ -86,7 +86,7 @@ function showPrelevel(g, i) {
   }).join('');
   const sel = BOOSTS.filter(b => pre.sel[b.k]).map(b => L(b.desc)).join(' · ');
   const bt = BOSS_ORDER[(g - 1) % BOSS_ORDER.length];
-  const a = advAllow(g), bh = advBonusHp(g);
+  const a = advAllow(g), bh = advBonusHp(g) + advHpAdj(g, i); // net heart change, same sum maxHp() uses
   const dots = [0, 1, 2, 3].slice(0, sp.colors).map(c => `<span class="cdot" style="background:${COLORS[c].fill}"></span>`).join('');
   const goal = isBossI(i)
     ? `<span class="mi">${svg('key', '#fff1a8')} ${sp.colors >= 4 && sp.dual ? '3–4' : sp.colors}</span><span class="mi">→</span><span class="mi">${svg('crown', '#ffcd4a')}</span><span class="mi">${svg('tuft', '#fff1a8')} → ${svg('crown', '#ffcd4a')}</span>`
@@ -99,7 +99,7 @@ function showPrelevel(g, i) {
     <div class="mrow">${goal}</div>
     ${newRow(g, i)}
     ${recRow(g)}
-    <div class="mrow">${starChips(g)}${advPar(g, i, sp.count) ? `<span class="mi">${svg('clock', '#bfe8ff')} ${mmss(advPar(g, i, sp.count))}</span>` : ''}${bh ? `<span class="mi">${svg('heart', '#ff6f61')} +${bh}</span>` : ''}${meta.advBest && meta.advBest[advId(g, i)] ? `<span class="mi">${t('bestL')} ${fmt(meta.advBest[advId(g, i)])}</span>` : ''}</div>
+    <div class="mrow">${starChips(g)}${advPar(g, i, sp.count) ? `<span class="mi">${svg('clock', '#bfe8ff')} ${mmss(advPar(g, i, sp.count))}</span>` : ''}${bh ? `<span class="mi"${bh < 0 ? ' style="color:var(--coral)"' : ''}>${svg('heart', '#ff6f61')} ${bh > 0 ? '+' : '−'}${Math.abs(bh)}</span>` : ''}${meta.advBest && meta.advBest[advId(g, i)] ? `<span class="mi">${t('bestL')} ${fmt(meta.advBest[advId(g, i)])}</span>` : ''}</div>
     <div class="hubtop"><div class="section" style="margin:0">${t('boostTitle')}</div><div class="wallet" style="font-size:17px">${SEED}${fmt(meta.coins - cost)}</div></div>
     <div class="grid2">${items}</div>
     <div class="bdesc">${sel}</div>
@@ -137,8 +137,7 @@ function startAdventure(g, i, boost) {
   boost = boost || {}; run.boosts = { ...boost };
   if (boost.heart) run.bonusHp = 1;
   if (boost.bubble) run.spareShield = true;
-  if (isHardI(g, i)) run.bonusHp = (run.bonusHp || 0) + BAL.hard.hp;
-  run.bonusHp = (run.bonusHp || 0) + (BAL.ghp[Math.max(0, Math.min(BAL.ghp.length - 1, (g - 1) * ADV_N + i - 1))] || 0);
+  run.bonusHp = (run.bonusHp || 0) + advHpAdj(g, i);
   run.hp = maxHp();
   beginGarden();
 }
@@ -226,17 +225,6 @@ function advResult(won, quit) {
       <button class="btn ghost small" data-act="map">${t('mapBtn')}</button>
     </div></div>`);
 }
-// What a level will throw at you, mirrored from newGarden() so the map can preview it.
-function advFoes(G, i) {
-  const sp = advSpec(G, i), ne = sp.ne, types = [];
-  for (let k = 0; k < sp.shooters; k++) types.push('shooter');
-  for (let k = 0; k < sp.hunters; k++) types.push('hunter');
-  const add = { mushroom: G >= 11 ? 2 : G >= 6 ? 1 : 0, sniper: G >= 12 ? 2 : G >= 8 ? 1 : 0, grape: G >= 13 ? 2 : G >= 10 ? 1 : 0 };
-  for (const [k, n] of Object.entries(add)) for (let j = 0; j < n && types.length < ne - (ne >= 3 ? 1 : 0); j++) types.push(k);
-  while (types.length < ne) types.push('wander');
-  const out = {}; types.slice(0, ne).forEach(k => out[k] = (out[k] || 0) + 1);
-  return { sp, foes: out };
-}
 // Map pictures show the pest with its face: rendered once to a small canvas, cached as a data URL.
 const PEST_PIC = {};
 function pestFaceSrc(type) {
@@ -251,7 +239,7 @@ function pestFaceSrc(type) {
 const pestPic = (type, size, cls) => { const P = PEST[type], src = P && (pestFaceSrc(type) || artGet(P.body)); return src ? `<img class="${cls || 'ppic'}" data-pest="${type}" src="${src}" alt="" style="width:${size}px;height:${size}px">` : ''; };
 function mapPreview(g, i) {
   if (isBossI(i)) return '';
-  const { sp, foes } = advFoes(g, i);
+  const sp = advSpec(g, i), foes = {}; advFoeTypes(g, i).forEach(k => foes[k] = (foes[k] || 0) + 1);
   const pests = Object.entries(foes).map(([k, n]) => `<span class="pv">${pestPic(k, 20)}${n > 1 ? `<b>${n}</b>` : ''}</span>`).join('');
   return `<div class="mprev"><span class="pv">${svg('tuft', '#6fe08a')}<b>${sp.count}</b></span>${pests}</div>`;
 }

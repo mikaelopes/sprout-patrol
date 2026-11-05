@@ -1,6 +1,6 @@
 let meta = {
   name: 'Sprout Keeper', coins: 0, char: 'pip', owned: { pip: true }, mode: 'normal',
-  up: { heart: 0, trail: 0, grip: 0, speed: 0, frost: 0, rainbow: 0, reroll: 0, coin: 0 }, cutsV: 2,
+  up: { heart: 0, trail: 0, grip: 0, speed: 0, frost: 0, rainbow: 0, reroll: 0, coin: 0 }, cutsV: 3,
   st: { pops: 0, bosses: 0, streaks: 0, runs: 0, tufts: 0, seedsTotal: 0, bestGarden: 0, bestCombo: 0, noHit: 0, rainbow: 0, evos: 0, oneHeartGrove: 0 },
   claimed: {}, adv: {}, discovered: {},
 };
@@ -44,6 +44,17 @@ function migrateNest2(m) {
   m.coins = (m.coins || 0) + back; if (back) m.refundNote = (m.refundNote || 0) + back;
   m.cutsV = 2; return m;
 }
+// v3 (P6): Quick Feet went from 10 levels of +0.035 to 5 of +0.07. Level L becomes ceil(L/2), so nobody loses speed;
+// anything paid beyond the new levels' price is refunded. Price tables are frozen here on purpose.
+function migrateQuick(m) {
+  if (!m || m.cutsV >= 3) return m;
+  const sumc = (arr, lv) => arr.slice(0, lv || 0).reduce((a, b) => a + b, 0);
+  const OLD = [200, 240, 290, 345, 415, 500, 595, 715, 860, 1030], NEW = [440, 635, 915, 1310, 1890];
+  m.up = m.up || {}; const L = Math.max(0, Math.min(OLD.length, m.up.speed || 0)), nl = Math.ceil(L / 2);
+  const back = Math.max(0, sumc(OLD, L) - sumc(NEW, nl));
+  m.up.speed = nl; m.coins = (m.coins || 0) + back; if (back) m.refundNote = (m.refundNote || 0) + back;
+  m.cutsV = 3; return m;
+}
 function applySave(saved) {
   const prev = typeof meta === 'object' ? meta : null;
   const base = JSON.parse(META_DEFAULT);
@@ -53,7 +64,7 @@ function applySave(saved) {
   // v108 loaded such saves wrongly (old Nest levels, 5-garden groves); spot that shape and migrate it now.
   const u = meta.up || {}, legacy = (u.grip || 0) + (u.reroll || 0) + (u.coin || 0) + (u.rainbow || 0) + (u.frost || 0) > 0 || Object.keys(meta.gear || {}).length > 0;
   if (saved.cutsV == null || legacy) meta.cutsV = 0;
-  mergeSeen(meta, prev); migrateCuts(meta); migrateNest2(meta);
+  mergeSeen(meta, prev); migrateCuts(meta); migrateNest2(meta); migrateQuick(meta);
   if (!CHARS[meta.char] || !meta.owned[meta.char]) meta.char = 'pip';
   if (!MODES[meta.mode]) meta.mode = 'normal';
 }
@@ -68,7 +79,7 @@ try { localStorage.setItem('tufttrail-probe', '1'); storageOK = localStorage.get
    so a broken update or a wiped slot can't erase anyone's progress. */
 const SAVE_KEY = 'tufttrail-v2', BAK_KEYS = ['tufttrail-bak-a', 'tufttrail-bak-b', 'tufttrail-bak-c'];
 const sumv = o => Object.values(o || {}).reduce((a, b) => a + (+b || 0), 0);
-const progressOf = m => !m || !m.st ? 0 : (m.st.tufts || 0) + 2 * (m.st.runs || 0) + 15 * sumv(m.adv) + 20 * ['trail', 'speed', 'heart', 'frost'].reduce((a, k) => a + ((m.up && m.up[k]) || 0), 0) + 40 * Object.keys(m.owned || {}).length + 5 * (m.road || 0) + 20 * ['charm', 'thorn'].reduce((a, k) => a + ((m.gear && m.gear[k]) || 0), 0) + (m.tutorialDone ? 5 : 0);
+const progressOf = m => !m || !m.st ? 0 : (m.st.tufts || 0) + 2 * (m.st.runs || 0) + 15 * sumv(m.adv) + 20 * ['trail', 'speed', 'heart', 'frost'].reduce((a, k) => a + ((m.up && m.up[k]) || 0), 0) + (m.cutsV >= 3 ? 20 * ((m.up && m.up.speed) || 0) : 0) + 40 * Object.keys(m.owned || {}).length + 5 * (m.road || 0) + 20 * ['charm', 'thorn'].reduce((a, k) => a + ((m.gear && m.gear[k]) || 0), 0) + (m.tutorialDone ? 5 : 0);
 const store = { best: 0, allowDown: false, lastBak: 0, bakIdx: 0, idbTimer: null, held: false };
 function readSlot(key) { try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v && v.meta ? v.meta : v && v.st ? v : null; } catch (e) { return null; } }
 function pickBest(list) { return list.filter(Boolean).sort((a, b) => (progressOf(b) - progressOf(a)) || ((b.savedAt || 0) - (a.savedAt || 0)))[0] || null; }

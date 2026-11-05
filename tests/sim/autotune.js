@@ -15,7 +15,7 @@ const gardensOf = (G, type) => type === 'b' ? [5] : type === 'h' ? [4] : (G >= 3
     await Promise.all(pages.map(async p => { while (jobs.length) { const j = jobs.shift();
       const r = await p.evaluate(({ G, i, L, cfg, seed, gs, type, mult }) => { const T = window.__g, m = T.meta;
         T.BAL.gs = JSON.parse(JSON.stringify(gs)); T.BAL.gs[type][G - 1] = mult;
-        m.tutorialDone = true; m.journeyDone = true; m.journey = 6; m.log = []; m.char = 'pip'; m.up = { ...m.up, trail: L, speed: L, heart: Math.min(L, 3), frost: L }; m.gear = {}; m.gearOn = [];
+        m.tutorialDone = true; m.journeyDone = true; m.journey = 6; m.log = []; m.char = 'pip'; m.up = { ...m.up, trail: L, speed: Math.ceil(L / 2), heart: Math.min(L, 3), frost: L }; m.gear = {}; m.gearOn = [];
         return window.__bot.play(G, i, cfg, seed); }, { G, i: j.i, L: goal(G), cfg: CASUAL, seed: j.seed, gs, type, mult });
       wins += r.won ? 1 : 0; tot++; if (r.won) tsum += r.t; } }));
     return { w: wins / tot, t: wins ? tsum / wins / 60 : 0 };

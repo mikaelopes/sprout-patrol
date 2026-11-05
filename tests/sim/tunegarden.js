@@ -11,7 +11,7 @@ const tgt = (G, i) => i === 8 ? 0.42 : (G >= 3 && i === 6) ? 0.32 : G <= 3 ? 0.9
   const ev = async (G, i, mult, hp) => { const jobs = []; for (let n = 0; n < N; n++) jobs.push(31337 + n * 104729); let w = 0, t = 0, tot = 0;
     await Promise.all(pages.map(async p => { while (jobs.length) { const seed = jobs.shift();
       const r = await p.evaluate(({ G, i, L, cfg, seed, mult, hp }) => { const T = window.__g, m = T.meta, k = (G - 1) * 8 + i - 1; T.BAL.gm[k] = mult; T.BAL.ghp[k] = hp;
-        m.tutorialDone = true; m.journeyDone = true; m.journey = 6; m.log = []; m.char = 'pip'; m.up = { ...m.up, trail: L, speed: L, heart: L, frost: 0 }; m.gear = {}; m.gearOn = [];
+        m.tutorialDone = true; m.journeyDone = true; m.journey = 6; m.log = []; m.char = 'pip'; m.up = { ...m.up, trail: L, speed: Math.ceil(L / 2), heart: L, frost: 0 }; m.gear = {}; m.gearOn = [];
         return window.__bot.play(G, i, cfg, seed); }, { G, i, L: goal(G), cfg: CASUAL, seed, mult, hp });
       tot++; if (r.won) { w++; t += r.t; } } }));
     return { w: w / tot, t: w ? t / w / 60 : 0 }; };
