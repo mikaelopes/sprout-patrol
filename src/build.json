@@ -1,0 +1,31 @@
+{
+ "scripts": [
+  "core.js",
+  "i18n.js",
+  "content.js",
+  "save.js",
+  "state.js",
+  "maze.js",
+  "balance.js",
+  "player.js",
+  "combat.js",
+  "skills-enemies.js",
+  "fx.js",
+  "audio.js",
+  "render-world.js",
+  "art.js",
+  "render-actors.js",
+  "render-frame.js",
+  "hud-cards.js",
+  "menu-core.js",
+  "daily-road.js",
+  "screens.js",
+  "onboarding.js",
+  "adventure.js",
+  "runmap.js",
+  "demo.js",
+  "input.js",
+  "loop.js"
+ ],
+ "tail": ""
+}

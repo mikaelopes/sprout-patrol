@@ -1,0 +1,5 @@
+#!/bin/bash
+cd "$(dirname "$0")/../.."
+PAGE=sim/game_c5.html GARDENS=9-1,9-2,9-3,9-4,9-5,9-6,9-7,10-1,10-2,10-3,10-4,10-5,10-6,10-7,11-1,11-2,11-3,11-4,11-5,11-6,11-7,12-1,12-2,12-3,12-4,12-5,12-6,12-7 node tests/sim/heroes.js tests/sim/c5_base.jsonl 10 pip
+PAGE=sim/game_c5.html GARDENS=9-1,9-2,9-3,9-4,9-5,9-6,9-7,10-1,10-2,10-3,10-4,10-5,10-6,10-7,11-1,11-2,11-3,11-4,11-5,11-6,11-7,12-1,12-2,12-3,12-4,12-5,12-6,12-7 C5=9 node tests/sim/heroes.js tests/sim/c5_five.jsonl 10 pip
+echo done

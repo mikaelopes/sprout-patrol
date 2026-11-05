@@ -1,0 +1,12 @@
+const { chromium } = require('playwright');
+(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,locale:'pt-BR'});const errs=[];p.on('pageerror',e=>errs.push(e.message));
+let html=require('fs').readFileSync('dist/sprout-patrol.html','utf8');html=html.replace("showSplash();\nrequestAnimationFrame(frame);","showSplash();\nwindow.__noLearn=1;window.__t={showChars,showProfile,startQuiz,showPrelevel,startAdventure,resume,showBossIntro,get meta(){return meta},get run(){return run},get enemies(){return enemies},setInv(v){invuln=v}};\nrequestAnimationFrame(frame);");
+await p.setContent(html);await p.waitForTimeout(500);
+await p.evaluate(()=>{const m=window.__t.meta;m.tutorialDone=true;m.journeyDone=true;m.coach={hub:1,map:1,prelevel:1,chars:1};m.coins=300;m.adv={};for(let g=1;g<=8;g++)for(let i=1;i<=8;i++)m.adv[g+'-'+i]=3;m.bossSeen={};});
+const shot=async(n,fn,w=500)=>{await p.evaluate(fn);await p.waitForTimeout(w);await p.screenshot({path:'/tmp/s_'+n+'.png'});};
+await shot('chars',()=>window.__t.showChars());
+await shot('quiz',()=>window.__t.startQuiz());
+await shot('pre81',()=>window.__t.showPrelevel(9,1));
+await shot('twins',()=>{const T=window.__t;T.startAdventure(3,8,{});},700);
+await shot('play',()=>{const T=window.__t;T.resume();T.setInv(99);},3500);
+console.log(errs);await b.close();})();

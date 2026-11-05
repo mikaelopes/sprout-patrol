@@ -1,0 +1,35 @@
+
+<div class="app">
+  <div class="hud">
+    <div class="hearts" id="hearts" aria-label="Health"></div>
+    <div class="stage" id="stage">Garden 1<small>Grove 1</small></div>
+    <div class="coins" id="coins" aria-label="Seeds"></div>
+    <button class="iconbtn" id="soundBtn" aria-label="Toggle sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="soundWave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
+    <button class="iconbtn" id="pauseBtn" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg></button>
+  </div>
+  <div class="xprow">
+    <span class="lv" id="lv">Lv 1</span>
+    <div class="xpbar"><div class="xpfill" id="xpfill"></div></div>
+    <span class="apill" id="apill" hidden></span>
+    <span class="cap" id="score"></span>
+    <span class="cap goals" id="goals" hidden></span>
+    <span class="cap" id="cap">Trail 0/4</span>
+    <span class="cap keychip" id="keychip" hidden></span>
+  </div>
+  <div class="loadout" id="loadout" hidden></div>
+  <div class="board" id="board">
+    <div class="tip" id="tip" hidden></div>
+    <button class="tutskip" id="tutSkip" hidden>Skip</button>
+    <canvas id="cv" aria-label="Game board"></canvas>
+    <button class="ability" id="abilityBtn" hidden aria-label="Use special move"><span id="abilityLabel">Warp</span></button>
+    <div class="overlay" id="overlay"></div>
+  </div>
+  <div class="pad" id="pad">
+    <button class="u" data-dir="up" aria-label="Up"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5l8 11H4z"/></svg></button>
+    <button class="l" data-dir="left" aria-label="Left"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 12l11-8v16z"/></svg></button>
+    <button class="d" data-dir="down" aria-label="Down"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 19L4 8h16z"/></svg></button>
+    <button class="r" data-dir="right" aria-label="Right"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 12L8 20V4z"/></svg></button>
+  </div>
+  <div class="keys" id="keysHint">Arrow keys or WASD to steer · Space for your special move · P to pause</div>
+</div>
+
