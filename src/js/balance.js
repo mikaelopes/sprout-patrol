@@ -11,18 +11,18 @@ const BAL = {
   neAdd:  { a: 0, b: 1, c: 1 },          // extra pests
   speed:  { a: 1.3, b: 1.5, c: 1.3 },    // pest speed multiplier
   hard:   { count: 0.45, ne: 3, speed: 1.4, hp: -1 }, // hard garden: short and sharp, one heart less
-  boss:   { speed: 0.92, ne: 5 },        // bigger boss maps, slightly slower guards
+  boss:   { speed: 0.92, ne: 5, mapStep: 1, crowd: 1 }, // slightly slower guards; map = the grove's garden-7 map + mapStep pests' worth, guards ≤ that + crowd (design/revamp/gameplay-levels.md P2.3)
   // per-grove pest speed multipliers for normal, hard and boss gardens (auto-tuned, index = grove - 1)
-  gs: { n: [1.15, 1.15, 1.15, 1.678, 1.475, 1.069, 0.987, 1.15, 0.987, 1.475, 1.028, 1.069], h: [1, 1, 1.5, 1.65, 0.9, 1.5, 1.15, 0.825, 1.719, 1.6, 0.947, 1.759], b: [1.719, 1.719, 0.642, 0.987, 0.987, 0.825, 0.947, 0.703, 0.541, 1.069, 0.581, 0.744] },
-  hne: [0,0,1,2,2,1,0,0,0,3,0,0],          // extra pests in each grove's hard garden
+  gs: { n: [1.15, 1.15, 1.15, 1.678, 1.475, 1.069, 0.987, 1.15, 0.987, 1.475, 1.028, 1.069], h: [1, 1, 1.6, 1.65, 0.9, 1.5, 1.15, 0.825, 1.719, 1.6, 0.947, 1.759], b: [1.55, 1.6, 0.642, 0.987, 0.987, 1.15, 0.947, 0.703, 0.541, 1.069, 0.581, 0.744] },
+  hne: [0,0,0,2,2,1,0,0,0,3,0,0],          // extra pests in each grove's hard garden (3-6 is the first one: a teaser, P2.4)
   gm: [1.469, 1.075, 1.075, 1.338, 1.075, 1.469, 0.813, 1.075, 1.075, 1.469, 1.075, 0.944, 1.075, 0.583, 1.075, 0.944, 1.075, 1.338, 1.075, 1.075, 1.075, 1.075, 1.075, 0.583, 0.616, 1.075, 1.075, 1.075, 1.075, 1.075, 1.075, 0.681, 1.534, 1.075, 1.075, 0.681, 1.567, 0.878, 1.075, 1.338, 0.944, 0.681, 1.338, 0.681, 1.075, 1.075, 0.878, 0.747, 1.009, 1.075, 0.681, 0.813, 1.206, 1.338, 0.944, 0.55, 1.075, 1.075, 0.813, 0.681, 0.747, 1.075, 0.616, 1.075, 1.338, 1.075, 1.338, 1.075, 1.009, 1.075, 1.075, 1.338, 1.075, 0.681, 1.075, 1.075, 1.075, 1.075, 0.583, 0.878, 0.813, 0.813, 1.075, 0.714, 0.681, 1.567, 1.075, 1.534, 1.534, 1.338, 1.075, 1.075, 1.075, 1.075, 1.075, 1.239],                 // per-garden fine tune of pest speed, index (grove-1)*5 + garden-1
-  ghp: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, -1, -1, 0, -2, 0, 0, 0, -1, 0, 0, 0, -1, -2, 0, 0, 0, 0, -2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 3, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, -1, 0, 0, -3, 0, 0, -3, 0, 0, 0, -1, -2, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0, 0, -3, -1, -3, 0, 0],                // per-garden heart adjustment
+  ghp: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, -2, 0, 0, 0, -1, 0, 0, 0, -1, -2, 0, 0, 0, 0, -2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 3, 0, 0, 0, 0, 0, -1, 0, 0, -1, 0, -1, 0, 0, -3, 0, 0, -3, 0, 0, 0, -1, -2, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0, 0, -3, -1, -3, 0, 0],                // per-garden heart adjustment
   rosterAdd: { a: 0, b: 1, c: 2 },     // extra special pests (instead of wanderers) once a grove's new pest has been met
   speedCap: 3.25,                         // pests never outrun a hero at the Nest goal
   twinsNe: 1,                            // the Twins already bring 2 bosses
   // economy: seeds paid per garden (tuned with full-season campaign simulations)
   eco: { first: 3, star: 6, starPay2: 0.15, starPay3: 0.3, starPayHard: 0.15, heroRate: 0.3, heroCap: 1, clearBase: 2, clearG: 1, chestBase: 20, chestStep: 8 },
-  nestSpeed: 0.035,                      // hero speed per Pés Ligeiros level (skill should decide ~70% of a win)
+  nestSpeed: 0.07,                       // hero speed per Pés Ligeiros level, 5 levels (P6: same +0.35 total as the old 10 × 0.035)
   heroAdd: 0.55,                         // added to every hero's base speed
 };
 const balBand = G => G <= 3 ? 'a' : G <= 8 ? 'b' : 'c';
@@ -33,9 +33,13 @@ function advSpec(G, i) {
   const ne = Math.min(6, 1 + Math.floor((G - 1) * 0.5) + saw) - (boss ? 1 : 0);
   const gi = Math.max(0, Math.min(11, G - 1)), gm = (boss ? BAL.gs.b[gi] : hard ? BAL.gs.h[gi] : BAL.gs.n[gi]) * (BAL.gm[gi * ADV_N + i - 1] || 1);
   const sp = Math.min(BAL.speedCap, Math.min(2.9, (1.5 + 0.06 * G + 0.035 * ii) * (G <= 2 ? 0.78 : G <= 4 ? 0.88 : 1)) * BAL.speed[bd] * (hard ? BAL.hard.speed : 1) * (boss ? BAL.boss.speed : 1) * gm);
+  const ne0 = Math.min(8, Math.max(boss ? 0 : 1, ne) + BAL.neAdd[bd] + (hard ? BAL.hard.ne + BAL.hne[Math.max(0, Math.min(11, G - 1))] : 0) + (boss ? (BOSS_ORDER[(G - 1) % BOSS_ORDER.length] === 'twins' ? BAL.twinsNe : BAL.boss.ne) : 0));
+  // Boss maps follow the grove: sized like garden 7 plus one step, and the guards can't crowd it (P2.3).
+  const mapNe = boss ? Math.min(ne0, advSpec(G, BOSS_I - 1).ne + BAL.boss.mapStep) : ne0;
   return {
     hard,
-    ne: Math.min(8, Math.max(boss ? 0 : 1, ne) + BAL.neAdd[bd] + (hard ? BAL.hard.ne + BAL.hne[Math.max(0, Math.min(11, G - 1))] : 0) + (boss ? (BOSS_ORDER[(G - 1) % BOSS_ORDER.length] === 'twins' ? BAL.twinsNe : BAL.boss.ne) : 0)),
+    ne: boss ? Math.min(ne0, mapNe + BAL.boss.crowd) : ne0,
+    mapNe,
     colors: G === 1 ? (ii <= 2 ? 2 : 3) : G <= 3 ? 3 : 4,
     count: Math.max(5, Math.min(26, Math.round((Math.min(20, 5 + Math.floor(G * 1.2) + ii) + BAL.countAdd[bd]) * BAL.count[bd] * (hard ? BAL.hard.count : 1)))),
     shooters: G < 2 ? 0 : Math.min(G >= 10 ? 3 : 2, Math.floor(G / 3) + (ii >= 3 ? 1 : 0)),
@@ -60,6 +64,17 @@ function advRoster(G, i, ne, oldSpecials) {
   while (types.length < ne) types.push('wander');
   return types.slice(0, ne);
 }
+// Boss gardens swap the last guard (two for the Twins) for the boss itself: how many normal pests stay.
+const bossTrim = (n, twins) => n > 1 ? (twins && n > 2 ? n - 2 : n - 1) : n;
+// Exactly the pests newGarden() puts on an Adventure board (P1: the map and prelevel read this, never a copy).
+function advFoeTypes(G, i) {
+  const sp = advSpec(G, i), types = advRoster(G, i, sp.ne, sp.shooters + sp.hunters).slice(0, sp.ne);
+  while (types.length < sp.ne) types.push('wander');
+  if (isBossI(i)) { const tw = BOSS_ORDER[(G - 1) % BOSS_ORDER.length] === 'twins'; types.length = bossTrim(types.length, tw); types.push(...Array(tw ? 2 : 1).fill('boss')); }
+  return types;
+}
+// Hearts a garden adds or takes on top of the grove bonus (hard garden + per-garden tune). Shown on the prelevel (P1).
+const advHpAdj = (G, i) => (isHardI(G, i) ? BAL.hard.hp : 0) + (BAL.ghp[Math.max(0, Math.min(BAL.ghp.length - 1, (G - 1) * ADV_N + i - 1))] || 0);
 // First appearance of each thing in the season (for the "New!" strip before a garden)
 function advFirsts(G, i) {
   const out = [], fresh = Object.keys(PEST_INTRO).find(k => PEST_INTRO[k] === G);

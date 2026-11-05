@@ -50,7 +50,7 @@ function newGarden() {
   if (run.mode === 'swarm') ne = Math.min(10, ne + 2);
   if (run.kind === 'endless' && run.wild && run.wild.greed) ne = Math.min(10, ne + 1);
   if (run.kind === 'endless' && run.node === 'thorny' && !run.boss) ne = Math.min(10, ne + 1);
-  const k = ne - 1;
+  const k = ne - 1 - (AS && AS.mapNe != null ? AS.ne - AS.mapNe : 0); // boss maps: sized by mapNe, not by the guard count
   COLS = Math.min(19, 11 + 2 * Math.floor(k * 0.75));
   ROWS = Math.min(25, 15 + 2 * k);
   START = { x: ((COLS - 1) / 2) | 1, y: ((ROWS - 1) / 2) | 1 };
@@ -136,8 +136,7 @@ function newGarden() {
       shootT: 3 + Math.random() * 2, speed: espeed * (type === 'hunter' ? 0.92 : 1) });
   });
   if (run.boss) {
-    if (enemies.length > 1) enemies.pop();
-    if (run.bossType === 'twins' && enemies.length > 1) enemies.pop();
+    enemies.length = bossTrim(enemies.length, run.bossType === 'twins');
     run.cages.forEach(cg => {
       const near = freeTiles(t2 => Math.abs(t2.x - cg.x) + Math.abs(t2.y - cg.y) <= 3 && Math.abs(t2.x - START.x) + Math.abs(t2.y - START.y) >= 5);
       const bt = near[rnd(near.length)] || cg;

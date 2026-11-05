@@ -22,7 +22,7 @@ const TD = { normal: [1.35, 2.75], hard: [0.9, 1.65], boss: [2.25, 3.85] }; // m
   const worker = async () => { let p = await b.newPage(); await p.setContent(html); await p.waitForTimeout(300); await p.addScriptTag({ content: bot }); let u = 0;
     while (jobs.length) { const j = jobs.shift(); if (++u > 150) { await p.close(); p = await b.newPage(); await p.setContent(html); await p.waitForTimeout(300); await p.addScriptTag({ content: bot }); u = 0; }
       const r = await p.evaluate(({ j, cfg, over }) => { const T = window.__g, m = T.meta; for (const k in over) { if (typeof over[k] === 'object') Object.assign(T.BAL[k], over[k]); else T.BAL[k] = over[k]; }
-        m.tutorialDone = true; m.journeyDone = true; m.journey = 6; m.log = []; m.char = 'pip'; m.up = { ...m.up, trail: j.L, speed: j.L, heart: j.L, frost: 0 }; m.gear = {}; m.gearOn = [];
+        m.tutorialDone = true; m.journeyDone = true; m.journey = 6; m.log = []; m.char = 'pip'; m.up = { ...m.up, trail: j.L, speed: Math.ceil(j.L / 2), heart: j.L, frost: 0 }; m.gear = {}; m.gearOn = [];
         return window.__bot.play(j.G, j.i, cfg, j.seed); }, { j, cfg: TIERS[j.tier], over });
       res.push({ ...j, ...r }); } };
   await Promise.all([worker(), worker()]); await b.close();
