@@ -1,5 +1,6 @@
 ---
 paths:
+  - "src/js/save.js"
   - "src/networking/**"
   - "Assets/**/{Networking,networking,Network,network}/**/*.cs"
   - "Source/**/{Networking,networking,Network,network}/**/*.{h,cpp}"

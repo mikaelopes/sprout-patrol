@@ -1,5 +1,6 @@
 ---
 paths:
+  - "src/js/skills-enemies.js"
   - "src/ai/**"
   - "Assets/**/{AI,Ai,ai}/**/*.cs"
   - "Source/**/{AI,Ai,ai}/**/*.{h,cpp}"

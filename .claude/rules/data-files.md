@@ -1,5 +1,8 @@
 ---
 paths:
+  - "src/js/content.js"
+  - "src/js/balance.js"
+  - "src/build.json"
   - "assets/data/**/*.json"
   - "Assets/**/{Data,data}/**/*.json"
   - "Content/**/{Data,data}/**/*.json"

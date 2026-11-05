@@ -46,6 +46,7 @@ each rule's own globs list the case variants (`{AI,Ai,ai}`).
 | `ui-code.md` | `src/ui/**` · `Assets/**/UI/**/*.cs` · `Source/**/UI/**/*.{h,cpp}` | No game state ownership, localization-ready, accessibility |
 | `design-docs.md` | `design/gdd/**` | Required sections per `modes.workflow` (8 at `full`, 5 at `standard`), formula format, edge cases |
 | `narrative.md` | `design/narrative/**` | Lore consistency, character voice, canon levels |
+| `save-data.md` | `src/js/save.js` · `src/js/content.js` | Save key, migrations, opt-in cloud (Sprout Patrol) |
 | `data-files.md` | `assets/data/**/*.json` · `Assets/**/Data/**/*.json` · `Content/**/Data/**/*.json` | JSON validity, naming conventions, schema rules |
 | `test-standards.md` | `tests/**` · `Assets/Tests/**/*.cs` · `Source/**/Tests/**/*.{h,cpp}` | Test naming, coverage requirements, fixture patterns |
 | `prototype-code.md` | `prototypes/**` | Relaxed standards, README required, hypothesis documented |

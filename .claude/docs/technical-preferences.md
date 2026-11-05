@@ -1,92 +1,90 @@
 # Technical Preferences
 
-<!-- project.yaml at the repo root is the machine-readable source of truth for
-     engine, specialists, naming, performance, platform, and testing.framework.
-     This file is the human-readable LEGACY FALLBACK: agents and skills resolve
-     each key from project.yaml first and fall back here only when the
-     project.yaml key is absent. /setup-engine dual-writes both.
-     Forbidden patterns and allowed libraries are NOT migrated — they live only
-     in this file. Populated by /setup-engine; updated as decisions are made. -->
+<!-- project.yaml is the machine-readable source of truth; this file is the human-readable
+     companion. Forbidden patterns and allowed libraries live ONLY here. -->
 
 ## Engine & Language
 
-- **Engine**: [TO BE CONFIGURED — run /setup-engine]
-- **Language**: [TO BE CONFIGURED]
-- **Rendering**: [TO BE CONFIGURED]
-- **Physics**: [TO BE CONFIGURED]
+- **Engine**: none (custom web). HTML5 Canvas 2D + DOM overlay for menus
+- **Language**: JavaScript (ES2020), CSS, HTML. No TypeScript, no framework
+- **Rendering**: Canvas 2D (maze, actors, FX) + HTML/CSS cards for menus and HUD
+- **Physics**: none. Grid movement with tile-centre interpolation
+- **Reference**: @docs/engine-reference/web/VERSION.md
 
 ## Input & Platform
 
-<!-- Written by /setup-engine. Read by /ux-design, /ux-review, /test-setup, /team-ui, and /dev-story -->
-<!-- to scope interaction specs, test helpers, and implementation to the correct input methods. -->
-
-- **Target Platforms**: [TO BE CONFIGURED — e.g., PC, Console, Mobile, Web]
-- **Input Methods**: [TO BE CONFIGURED — e.g., Keyboard/Mouse, Gamepad, Touch, Mixed]
-- **Primary Input**: [TO BE CONFIGURED — the dominant input for this game]
-- **Gamepad Support**: [TO BE CONFIGURED — Full / Partial / None]
-- **Touch Support**: [TO BE CONFIGURED — Full / Partial / None]
-- **Platform Notes**: [TO BE CONFIGURED — any platform-specific UX constraints]
+- **Target Platforms**: Mobile web (iOS Safari, Android Chrome) first; desktop/tablet browsers
+- **Delivery**: ONE self-contained html file, shipped twice from the same build:
+  as a Claude artifact (`dist/sprout-patrol.html`) and on GitHub Pages (`index.html`)
+- **Input Methods**: Touch (swipe + optional thumb pad + double-tap special), keyboard (arrows/WASD, Space, P)
+- **Primary Input**: Touch
+- **Gamepad Support**: None
+- **Touch Support**: Full
+- **Platform Notes**: phones render at 1x; `--uiz` scales menus up to 1.75x on big screens.
+  The Claude host adds the doctype/viewport skeleton; `tools/build.py` adds it for Pages.
 
 ## Naming Conventions
 
-- **Classes**: [TO BE CONFIGURED]
-- **Variables**: [TO BE CONFIGURED]
-- **Signals/Events**: [TO BE CONFIGURED]
-- **Files**: [TO BE CONFIGURED]
-- **Scenes/Prefabs**: [TO BE CONFIGURED]
-- **Constants**: [TO BE CONFIGURED]
+- **Functions / variables**: camelCase (`updatePlayer`, `meta`, `run`)
+- **Constants / tables**: SCREAMING_SNAKE (`BAL`, `PEST_INTRO`, `CHARS`)
+- **Files**: kebab-case in `src/js/`, order defined in `src/build.json`
+- **Strings**: keys in the `S` table in `src/js/i18n.js`, read with `t(key)`
 
 ## Performance Budgets
 
-- **Target Framerate**: [TO BE CONFIGURED]
-- **Frame Budget**: [TO BE CONFIGURED]
-- **Draw Calls**: [TO BE CONFIGURED]
-- **Memory Ceiling**: [TO BE CONFIGURED]
+- **Target Framerate**: 60 fps on a mid-range phone
+- **Frame Budget**: 16.67 ms
+- **Load size**: keep the single file under 3 MB (art is ~2.2 MB of it)
+- **Memory Ceiling**: not set
 
 ## Testing
 
-- **Framework**: [TO BE CONFIGURED]
-- **Minimum Coverage**: [TO BE CONFIGURED]
-- **Required Tests**: Balance formulas, gameplay systems, networking (if applicable)
+- **Framework**: Playwright (Chromium) driving the real built page; no unit-test framework
+- **Fast gate**: `bash tests/run.sh` (build check, load errors, state tests, 140-cell counter table, save flows)
+- **Balance sims**: `tests/sim/` (tune.js bands, campaign.js season length, heroes.js parity,
+  readab.js readability, ftue.js first play). Run when numbers or pests change.
+- **UI evidence**: screenshots via `tests/smoke/tour.js`, retained in `production/qa/evidence/`
 
 ## Forbidden Patterns
 
-<!-- Add patterns that should never appear in this project's codebase -->
-- [None configured yet — add as architectural decisions are made]
+- Runtime network calls, except (a) the Google Font stylesheet and (b) cloud save AFTER the
+  player opts in (Claude artifact db, or Firebase via gstatic when outside Claude)
+- External files at runtime (images, scripts, JSON). Everything is inlined by the build
+- Changing the save key `tufttrail-v2`, or any save change without a migration in `applySave`
+  that loads every older save shape
+- `localStorage` access without try/catch (private mode / blocked storage must still play)
+- Player-facing text that is not in BOTH `pt` and `en`
+- Colour as the only carrier of meaning (fruit shapes/icons must back it up)
+- Flashes faster than 3 per second; motion that ignores `reduceMotion`
+- Editing `index.html` or `dist/` by hand (they are build outputs)
 
 ## Allowed Libraries / Addons
 
-<!-- Add approved third-party dependencies here -->
-- [None configured yet — add as dependencies are approved]
+- Firebase JS SDK 10.12.2 (app, auth, firestore) loaded from gstatic, only after opt-in, only outside Claude
+- Playwright (dev only, tests)
+- Python 3 standard library (build and analysis scripts)
 
 ## Architecture Decisions Log
 
-<!-- Quick reference linking to full ADRs in docs/architecture/ -->
-- [No ADRs yet — use /architecture-decision to create one]
+- Single closure, ordered concatenation of `src/js/*.js` (see `tools/build.py` docstring)
+- Cloud save abstraction: one `{get,set}` ref shape for Claude db and Firebase (`src/js/save.js`)
 
 ## Engine Specialists
 
-<!-- Written by /setup-engine when engine is configured. -->
-<!-- Read by /code-review, /architecture-decision, /architecture-review, and team skills -->
-<!-- to know which specialist to spawn for engine-specific validation. -->
-
-- **Primary**: [TO BE CONFIGURED — run /setup-engine]
-- **Language/Code Specialist**: [TO BE CONFIGURED]
-- **Shader Specialist**: [TO BE CONFIGURED]
-- **UI Specialist**: [TO BE CONFIGURED]
-- **Additional Specialists**: [TO BE CONFIGURED]
-- **Routing Notes**: [TO BE CONFIGURED]
+- **Primary**: lead-programmer
+- **Language/Code Specialist**: gameplay-programmer
+- **Shader Specialist**: technical-artist (canvas drawing, sprites, FX)
+- **UI Specialist**: ui-programmer
+- **Additional Specialists**: performance-analyst (load size, frame time), localization-lead (PT/EN)
+- **Routing Notes**: there is no engine specialist; route engine-level questions to lead-programmer
 
 ### File Extension Routing
 
-<!-- Skills use this table to select the right specialist per file type. -->
-<!-- If a row says [TO BE CONFIGURED], fall back to Primary for that file type. -->
-
 | File Extension / Type | Specialist to Spawn |
 |-----------------------|---------------------|
-| Game code (primary language) | [TO BE CONFIGURED] |
-| Shader / material files | [TO BE CONFIGURED] |
-| UI / screen files | [TO BE CONFIGURED] |
-| Scene / prefab / level files | [TO BE CONFIGURED] |
-| Native extension / plugin files | [TO BE CONFIGURED] |
-| General architecture review | Primary |
+| Game code (`src/js/*.js`) | gameplay-programmer |
+| Rendering (`render-*.js`, `fx.js`, `art.js`) | technical-artist |
+| UI / screen files (`screens.js`, `menu-core.js`, `hud-cards.js`, `onboarding.js`, `src/css/`) | ui-programmer |
+| Strings (`i18n.js`) | localization-lead |
+| Scene / level files | n/a (mazes are generated in `maze.js`) |
+| General architecture review | lead-programmer |

@@ -1,5 +1,12 @@
 ---
 paths:
+  - "src/js/player.js"
+  - "src/js/combat.js"
+  - "src/js/skills-enemies.js"
+  - "src/js/maze.js"
+  - "src/js/adventure.js"
+  - "src/js/demo.js"
+  - "src/js/input.js"
   - "src/gameplay/**"
   - "Assets/**/{Gameplay,gameplay}/**/*.cs"
   - "Source/**/{Gameplay,gameplay}/**/*.{h,cpp}"

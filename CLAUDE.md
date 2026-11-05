@@ -1,46 +1,34 @@
-# Sprout Patrol -- Claude Code Game Studios setup
+# Sprout Patrol -- Claude Code Game Studios
 
-Mikael's mobile browser game (PT/EN), run with the Claude Code Game Studios agents
-(engine-specific Godot/Unity/Unreal agents removed). Each agent owns a domain;
-the collaboration protocol below still applies.
+Mikael's mobile maze game, developed with Claude Code Game Studios (Godot/Unity/Unreal
+specialists removed: this is a plain web game). Each agent owns a specific domain.
+
+**Read first:** `design/game-brief.md` (what the game is and the owner's fixed decisions),
+`.claude/docs/technical-preferences.md` (forbidden patterns, budgets, routing),
+`design/accessibility-requirements.md` (readability commitments).
 
 ## Technology Stack
 
-- **Engine**: none (custom). HTML5 Canvas 2D + vanilla JavaScript (ES2020)
-- **Language**: JavaScript, CSS, HTML
-- **Version Control**: Git, trunk (`main`); GitHub Pages deploys `main` / root
-- **Build System**: `python3 tools/build.py --check` concatenates `src/` into ONE html file
-- **Asset Pipeline**: sprites are base64 WebP data URIs in `src/js/art.js` (no external files at runtime)
+- **Engine**: none -- HTML5 Canvas 2D + vanilla JavaScript, shipped as ONE html file
+- **Language**: JavaScript (ES2020), CSS, HTML
+- **Version Control**: Git, trunk-based on `main`; GitHub Pages serves `main` root
+- **Build System**: `python3 tools/build.py --check` -> `dist/sprout-patrol.html` (Claude artifact) + `index.html` (Pages)
+- **Asset Pipeline**: sprites are WebP data URIs in `src/js/art.js`; no runtime asset files
+- **Tests**: `bash tests/run.sh` (fast gate) and `tests/sim/` (Playwright bot balance sims)
 
 ## Project Structure
 
-- `src/head.html`, `src/body.html`, `src/css/game.css`: page shell and styles
-- `src/js/*.js`: game code, concatenated in the order listed in `src/build.json` inside a
-  single closure (shared scope, no modules). A file may use another file's top-level names
-  at call time; at load time only names from earlier files exist.
-- `dist/sprout-patrol.html`: build output published as the Claude artifact
-  (https://claude.ai/artifact/AC5g1tTCceFVtT2S2hdthi, capabilities `db`, `user`)
-- `index.html`: build output for GitHub Pages (adds doctype + mobile viewport). Never edit by hand.
-- `tests/run.sh`: fast gate (build, load errors, state tests, 140-cell counter table, save flows)
-- `tests/sim/`: Playwright bot harness for balance (tune.js bands, campaign.js, heroes.js parity,
-  readab.js readability, ftue.js first play). Uses the `window.__g` hook from `mkpage.js`.
-- `design/`, `docs/`, `production/`: studio documents (GDDs, ADRs, sprints)
+@.claude/docs/directory-structure.md
 
-See @.claude/docs/directory-structure.md for the studio layout; for this project the
-code root is `src/` and the test root is `tests/`.
+Code root `src/`: `head.html`, `body.html`, `css/game.css`, and `js/*.js` concatenated in
+`src/build.json` order inside ONE closure (shared scope, no modules). Never edit `index.html`
+or `dist/` by hand. Published artifact: https://claude.ai/artifact/AC5g1tTCceFVtT2S2hdthi
+(capabilities `db`, `user`); Pages: https://mikaelopes.github.io/sprout-patrol/
 
-## Hard Constraints (owner decisions -- do not change without asking Mikael)
+## Engine Version Reference
 
-- The game ships as ONE self-contained html file, playable as a Claude artifact AND on GitHub Pages.
-- Name is "Sprout Patrol" in every language. All in-game text exists in PT and EN, kept as short as possible.
-- Save key `tufttrail-v2` never changes; old saves must always load (see `applySave` migrations).
-- Cloud save is opt-in: no network calls until the player taps Connect / Sign in with Google.
-  In Claude it uses the artifact db; outside Claude it uses Firebase (keys in `src/js/save.js`
-  are public by design; Firestore rules restrict `saves/{uid}` to that uid).
-- Mac is the no-move tank hero. Hero win rates stay within +-5 points of each other.
-- Readability: telegraphs >= 0.4 s, flashes <= 3/s, reduced motion respected, colors readable in
-  greyscale and for deuteranopes (4 fruit colors, shapes carry meaning).
-- Never publish or send zip files.
+@docs/engine-reference/web/VERSION.md
+
 
 ## Technical Preferences
 
@@ -75,8 +63,8 @@ Every task follows: **Question -> Options -> Decision -> Draft -> Approval**
 
 See `docs/COLLABORATIVE-DESIGN-PRINCIPLE.md` for full protocol and examples.
 
-> This is a brownfield project already in Production. Use `/adopt` or
-> `/project-stage-detect` instead of `/start` when orienting.
+> **Brownfield project in Production.** Orient with `/help` or `/project-stage-detect`,
+> not `/start`. Ship flow: `bash tests/run.sh` -> commit -> push (Pages) -> republish the artifact.
 
 ## Coding Standards
 

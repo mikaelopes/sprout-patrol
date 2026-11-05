@@ -1,5 +1,12 @@
 ---
 paths:
+  - "src/js/core.js"
+  - "src/js/state.js"
+  - "src/js/loop.js"
+  - "src/js/render-*.js"
+  - "src/js/fx.js"
+  - "src/js/audio.js"
+  - "tools/**"
   - "src/core/**"
   - "Assets/**/{Core,core}/**/*.cs"
   - "Source/**/{Core,core}/**/*.{h,cpp}"
