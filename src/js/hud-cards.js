@@ -23,6 +23,9 @@ function updateHud() {
   const menu = inMenu();
   document.querySelector('.xprow').style.visibility = menu ? 'hidden' : '';
   document.body.classList.toggle('menu', menu);
+  // Pause only works in play; on the hub its slot holds the save chip (opens the account / save-code box) until signed in.
+  document.getElementById('pauseBtn').hidden = !['play', 'pause'].includes(mode);
+  { const sc = document.getElementById('saveChip'); sc.hidden = !(mode === 'hub' && cloud.state !== 'on'); sc.querySelector('.sdot').hidden = storageOK; sc.setAttribute('aria-label', t('saveChip')); sc.title = t('saveChip'); }
   const lo = document.getElementById('loadout');
   const showLo = run.kind === 'endless' && ['play', 'pause', 'cards', 'clear', 'camp', 'bossintro'].includes(mode);
   lo.hidden = !showLo;
@@ -38,12 +41,14 @@ function updateHud() {
   document.getElementById('coins').innerHTML = SEED + fmt(menu ? meta.coins : run.coins);
   document.getElementById('score').textContent = run.kind === 'tutorial' ? '' : t('pts', fmt(run.score || 0));
   document.getElementById('lv').style.color = run.kind === 'adv' ? 'var(--gold)' : '';
-  document.getElementById('lv').innerHTML = run.kind === 'adv' ? '★'.repeat(advStarsFor(run.adv.g, run.hits, run.at, run.par)) + (run.par ? ` <span style="color:${run.at > run.par ? 'var(--coral)' : 'var(--muted)'};margin-left:6px">${mmss(run.at)}/${mmss(run.par)}</span>` : '') : t('lv') + ' ' + run.level;
+  document.getElementById('lv').innerHTML = run.kind === 'adv' ? '★'.repeat(advStarsFor(run.adv.g, run.hits, run.at, run.par)) + (run.par ? ` <span class="partime" style="color:${run.at > run.par ? 'var(--coral)' : 'var(--muted)'}">${run.at > run.par ? '+' + mmss(run.at - run.par) : mmss(run.par - run.at)}</span>` : '') : t('lv') + ' ' + run.level;
   document.body.classList.toggle('adv', run.kind === 'adv');
   document.getElementById('xpfill').style.width = Math.min(100, run.xp / xpNeed() * 100) + '%';
-  document.getElementById('cap').textContent = t('trail') + ' ' + (followers ? followers.length : 0) + '/' + cap();
+  // Trail capacity is the number players need while steering: icon + count, never shrunk (see .xprow CSS).
+  { const ce = document.getElementById('cap'), txt = (followers ? followers.length : 0) + '/' + cap();
+    if (ce.dataset.v !== txt) { ce.dataset.v = txt; ce.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${I.stack}</svg>${txt}`; ce.setAttribute('aria-label', t('trail') + ' ' + txt); } }
   { const gl = document.getElementById('goals'), on = !!(run.kind === 'adv' && !run.boss && run.goalC && Object.keys(run.goalC).length && !MENU_MODES.includes(mode));
-    gl.hidden = !on; document.getElementById('score').hidden = on;
+    gl.hidden = !on; document.getElementById('score').hidden = on || run.kind === 'adv'; // score is not a goal in Adventure
     if (on) { const html = Object.keys(run.goalC).map(c => { const left = Math.max(0, run.goalC[c] - ((run.gotC && run.gotC[c]) || 0)), im = artGet(TUFT_ART[c]);
         return `<span class="g${left ? '' : ' done'}">${im ? `<img src="${im}" alt="">` : `<i style="background:${COLORS[c].fill}"></i>`}${left ? left : '✓'}</span>`; }).join('');
       if (gl.dataset.v !== html) { gl.dataset.v = html; gl.innerHTML = html; } } }

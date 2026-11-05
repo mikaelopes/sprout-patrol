@@ -6,6 +6,7 @@ function show(html) {
   const prevS = same && sc0 ? sc0.scrollTop : 0, prevC = same && cd0 ? cd0.scrollTop : 0;
   overlay.innerHTML = html;
   overlay.hidden = false;
+  tidyScreen();
   const sc = overlay.querySelector('.scroll'), cd = overlay.querySelector('.card');
   if (sc) sc.scrollTop = prevS;
   if (cd) cd.scrollTop = prevC;
@@ -16,6 +17,13 @@ function show(html) {
   if (kbUser || matchMedia('(pointer:fine)').matches) { const b = overlay.querySelector('.node.cur') || overlay.querySelector('.btn:not(.ghost):not([disabled])') || overlay.querySelector('button:not([disabled])'); if (b) b.focus({ preventScroll: true }); }
 }
 let lastShown = '', kbUser = false;
+/** Menu-side touch-ups for screens whose markup another module builds (prelevel/results live in adventure.js). */
+function tidyScreen() {
+  if (mode === 'prelevel') { // "GROVE 1 · GARDEN 3" over "Garden 1-3" says the same thing twice; boss screens keep it
+    const e = overlay.querySelector('.card > .eyebrow:first-child'), h = overlay.querySelector('.card > h2');
+    if (e && h && /\d-\d+$/.test(h.textContent.trim())) e.remove(); }
+  if (mode === 'advresult' && nestHintOn()) { const nx = overlay.querySelector('[data-act="advnext"]'); if (nx) nx.insertAdjacentHTML('afterend', nestHintHtml()); }
+}
 function hide() { overlay.hidden = true; overlay.innerHTML = ''; lastShown = ''; updateHud(); }
 function avatar(k, size, hat, mood) {
   const c = CHARS[k];

@@ -78,6 +78,11 @@ addEventListener('keydown', e => {
   if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { if (mode === 'pause') resume(); }
 });
 document.getElementById('pauseBtn').addEventListener('click', () => { if (mode === 'play') pauseGame(); else if (mode === 'pause') resume(); });
+// Hub save chip: the existing account box (or, where accounts can't work here, the save-code section in Profile).
+document.getElementById('saveChip').addEventListener('click', () => {
+  if (mode !== 'hub') return; initAudio(); sfx('tap');
+  if (cloud.can === false) { showProfile(); const s = document.getElementById('saveStatus'); if (s) s.scrollIntoView({ block: 'center' }); } else showCloudOffer();
+});
 document.getElementById('soundBtn').addEventListener('click', () => {
   muted = !muted; initAudio();
   document.getElementById('soundWave').style.opacity = muted ? '0' : '1';

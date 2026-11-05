@@ -9,11 +9,12 @@ function showHub() {
     <div class="hubtop"><div><div class="eyebrow">${t('welcome')}</div><h2>${esc(meta.name)}</h2></div></div>
     ${meta.refundNote ? `<div class="chestbar refund"><div class="txt"><span><i class="rseed">${SEED}</i> +${meta.refundNote} · ${LANG === 'pt' ? 'O Ninho mudou: devolvemos suas sementes para você escolher de novo.' : 'The Nest changed: your seeds are back so you can choose again.'}</span></div></div>` : ''}
     ${!storageOK && cloud.state !== 'on' ? `<div class="chestbar" style="border-color:var(--coral)"><div class="txt"><span>${t('hubWarn')}</span></div><button class="buy" data-act="profile">${t('hubWarnBtn')}</button></div>` : ''}
-    <div class="who">${avatar(meta.char, 44, cosState().hat)}<div class="txt"><span class="t">${c.name} · ${L(md.name)}</span><span class="d">${meta.st.bestGarden ? t('bestRun', Math.ceil(meta.st.bestGarden / PER_GROVE), (meta.st.bestGarden - 1) % PER_GROVE + 1) : t('bestNone')}</span></div></div>
+    <button class="who" data-act="chars">${avatar(meta.char, 44, cosState().hat)}<div class="txt"><span class="t">${c.name}${endlessOpen() ? ' · ' + L(md.name) : ''}</span>${endlessOpen() ? `<span class="d">${meta.st.bestGarden ? t('bestRun', Math.ceil(meta.st.bestGarden / PER_GROVE), (meta.st.bestGarden - 1) % PER_GROVE + 1) : t('bestNone')}</span>` : ''}</div></button>
     <button class="btn" data-act="map">${t('adventure')} · ${t('grove')} ${advTop()}</button>
     ${meta.savedRun && meta.savedRun.run ? `<button class="btn btn2l" data-act="continue">${t('continueRun')}<small>${t('continueSub', Math.floor((meta.savedRun.run.garden - 1) / PER_GROVE) + 1, (meta.savedRun.run.garden - 1) % PER_GROVE + 1)}</small></button>` : ''}
     ${endlessOpen() ? `<button class="btn ghost" data-act="start">${meta.savedRun ? t('newRun') : t('endless')} · ${L(md.name)}</button>` : ''}
     ${dailyBar()}
+    ${nestHintOn() ? nestHintHtml() : ''}
     <div class="hubgrid six">
       <button class="tile" data-act="chars">${svg('user', '#ffcd4a')}<span class="t">${t('characters')}</span><span class="d">${t('unlockedN', Object.keys(meta.owned).length, Object.keys(CHARS).length)}</span></button>
       <button class="tile" data-act="nest">${svg('nest', '#9fe3d4')}<span class="t">${t('nest')}</span><span class="d">${t('nestSub')}</span></button>
@@ -60,6 +61,7 @@ function groveReached() {
 let nestTab = 'up', nestPage = 0;
 function showNest() {
   mode = 'nest';
+  if (meta.tutorialDone && !meta.nestHinted) { meta.nestHinted = true; saveMeta(); } // the post-garden Nest hint has done its job
   if (nestTab === 'rep' && !repOpen()) nestTab = 'up';
   const items = NEST.map(u => {
     const lv = meta.up[u.k], maxed = lv >= u.max, cost = maxed ? 0 : u.cost[lv];
@@ -103,7 +105,7 @@ function showChallenges() {
       const action = claimed ? `<span class="done">${t('claimed')}</span>`
         : done ? `<button class="buy" data-act="claim" data-k="${c.id}">${t('claim')} ${SEED}${c.reward}</button>`
         : `<span class="done">${SEED.replace('<svg', '<svg width="12" height="12"')} ${c.reward}</span>`;
-      return `<div class="nrow"><div class="txt"><span class="t">${L(c.name)}</span><span class="d">${L(c.desc)} ${fmt(v)}/${fmt(c.goal)}</span>
+      return `<div class="nrow"><div class="txt"><span class="t">${L(c.name)}</span><span class="d">${t('chDesc')[c.id] || L(c.desc) + ' ' + fmt(v) + '/' + fmt(c.goal)}</span>
         <span class="prog"><i style="width:${v / c.goal * 100}%"></i></span></div>${action}</div>`;
     }).join('');
     body = `<div class="list">${rows}</div>

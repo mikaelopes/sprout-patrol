@@ -174,5 +174,16 @@ Object.assign(S.pt, {
   roadHow: 'Cada brotinho que você entrega te leva adiante na estrada.', changeLook: 'Chapéus e visual', readyTag: 'Pegar', roadShort: 'Estrada', bookShort: 'Evoluções',
   chipSeeds: 'Sementes que pegar', chipClear: '+30 ao terminar', chipRing: n => `+${n} do anel`, ringRule: 'Perder um dia nunca zera o anel. O dia 7 paga mais.',
 });
+// HUD & menus slice (design/revamp/menus-onboarding.md P1-P4): short labels, both languages.
+Object.assign(S.en, {
+  starChest: () => 'Chest', chestReady: 'Ready!', saveChip: 'Save your progress', saveHere: 'Saved on this device only.',
+  nestNew: 'New: Nest ›', nestNewD: 'Spend seeds on upgrades',
+  chDesc: { grove2: 'Reach grove 2', grove3: 'Reach grove 3', grove4: 'Reach grove 4' },
+});
+Object.assign(S.pt, {
+  starChest: () => 'Baú', chestReady: 'Pronto!', saveChip: 'Salvar progresso', saveHere: 'Salvo só neste aparelho.',
+  nestNew: 'Novo: Ninho ›', nestNewD: 'Gaste sementes em melhorias',
+  chDesc: { grove2: 'Chegue ao bosque 2', grove3: 'Chegue ao bosque 3', grove4: 'Chegue ao bosque 4' },
+});
 const t = (k, ...a) => { const v = S[LANG][k] ?? S.en[k]; return typeof v === 'function' ? v(...a) : v; };
 

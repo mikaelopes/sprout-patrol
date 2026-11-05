@@ -1,14 +1,14 @@
 /* Layout: one-screen portrait arcade, HUD strip on top, scrolling hedge-maze viewport in the middle, optional thumb pad at the bottom. Single night-garden look on purpose. */
 :root{
-  --night:#141a2e;
-  --panel:#222a4d;
-  --line:#36406e;
-  --ink:#f5efe3;
-  --muted:#b4bbd9;
+  --night:#14251b;
+  --panel:#22392b;
+  --line:#3f6249;
+  --ink:#f2ecd8;
+  --muted:#b5c6ab;
   --gold:#ffcd4a;
   --gold-ink:#2b2000;
   --coral:#ff6f61;
-  --edge:#0d1122;
+  --edge:#0c1610;
   --display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
   --label:"Fredoka","Trebuchet MS",system-ui,sans-serif;
   --accent:#8fd35b;
@@ -53,11 +53,11 @@ canvas{display:block;border-radius:14px;box-shadow:0 0 0 1px var(--line)}
 .loadout.big .lslot svg{width:20px;height:20px}
 .lsep{width:1px;height:20px;background:var(--line);margin:0 4px}
 .llegend{display:flex;justify-content:center;gap:14px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.tip{position:absolute;left:10px;right:10px;top:10px;background:rgba(20,26,46,.94);border:1.5px solid var(--gold);border-radius:12px;padding:8px 12px;font-weight:800;font-size:13.5px;line-height:1.35;color:var(--ink);z-index:4;pointer-events:none;text-align:center}
+.tip{position:absolute;left:10px;right:10px;top:10px;background:rgba(20,37,27,.94);border:1.5px solid var(--gold);border-radius:12px;padding:8px 12px;font-weight:800;font-size:13.5px;line-height:1.35;color:var(--ink);z-index:4;pointer-events:none;text-align:center}
 .tip[hidden]{display:none}
 .apill{flex:none;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:none;border-radius:99px;padding:3px 9px;background:var(--panel);color:var(--muted);border:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
 .apill.ready{background:var(--gold);color:var(--gold-ink);border-color:var(--gold)}
-.ability{position:absolute;right:10px;bottom:10px;width:64px;height:64px;border-radius:50%;border:2px solid var(--ink);background:conic-gradient(var(--gold) calc(var(--cd,1)*360deg),rgba(34,42,77,.85) 0);color:var(--gold-ink);font-family:var(--display);font-size:13px;letter-spacing:.03em;cursor:pointer;display:grid;place-items:center;padding:0;z-index:3;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.ability{position:absolute;right:10px;bottom:10px;width:64px;height:64px;border-radius:50%;border:2px solid var(--ink);background:conic-gradient(var(--gold) calc(var(--cd,1)*360deg),rgba(34,57,43,.85) 0);color:var(--gold-ink);font-family:var(--display);font-size:13px;letter-spacing:.03em;cursor:pointer;display:grid;place-items:center;padding:0;z-index:3;box-shadow:0 4px 14px rgba(0,0,0,.45)}
 .ability span{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--panel);color:var(--ink)}
 .ability.ready span{background:var(--gold);color:var(--gold-ink)}
 .ability[hidden]{display:none}
@@ -259,7 +259,7 @@ body.adv .xpbar{display:none}body.adv #score{margin-left:auto}
 .heart{width:17px;height:15px;flex:none}
 .hearts.many .heart{width:13px;height:12px}
 .hearts.many{gap:1px}
-body.menu .overlay{background:rgba(16,21,40,.94)}
+body.menu .overlay{background:rgba(15,29,20,.94)}
 .card > .btn.ghost.small:last-child{position:sticky;bottom:-16px;margin-bottom:-4px;background:var(--panel);z-index:2}
 .card h1,.card h2,.eyebrow,.card p{text-wrap:balance}
 .lslot b{font-size:12px;min-width:15px;height:15px;line-height:15px}
@@ -373,7 +373,7 @@ p.small svg{width:14px;height:14px;vertical-align:-2px}
 .runmap .mlinks{position:absolute;inset:0;pointer-events:none;overflow:visible}
 .mrow2{position:relative;display:flex;justify-content:space-around;gap:6px;z-index:1}
 .mnode{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;color:var(--ink);font-family:var(--body);cursor:pointer;min-width:76px;padding:0}
-.mnode .disc{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--nb) 35%,#1c2342);border:3px solid color-mix(in srgb,var(--nb) 55%,#36406e);font-size:24px}
+.mnode .disc{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--nb) 35%,#1d3226);border:3px solid color-mix(in srgb,var(--nb) 55%,#3f6249);font-size:24px}
 .mnode .disc svg{width:26px;height:26px}
 .mnode.boss .disc{width:64px;height:64px}.mnode.boss .disc svg{width:34px;height:34px}
 .mnode .lbl{font-size:13px;font-weight:700;color:var(--muted)}
@@ -406,22 +406,22 @@ p.small svg{width:14px;height:14px;vertical-align:-2px}
 .gear .pips{margin-left:0}
 .gear .max{font-weight:800;color:var(--accent);text-align:center;font-size:14px}
 
-/* ===== Storybook Garden theme: cream paper cards, chunky raised buttons, one job per color =====
-   green = go / primary, white = secondary, gold = currency & rewards, coral = danger, brown ink = text on paper.
-   The night maze stays dark so the painted characters pop; menus sit on warm paper like a picture book. */
+/* ===== Moss menu skin (owner decision: the one menu palette; art-feel P5) =====
+   green = go / primary, tile = secondary, gold = currency & rewards, coral = danger, cream ink on moss cards.
+   Page, header buttons, HUD chips and cards all use these tokens; there are no other palettes. */
 :root{
-  --paper:#fff7e8; --paper2:#fbebd2; --paperLine:#e8cfa6; --paperEdge:#d6b787;
-  --inkDark:#4a3426; --inkSoft:#8b6f5a; --leaf:#3e8e2e;
+  --paper:#22392b; --paper2:#2b4636; --paperLine:#3f6249; --paperEdge:#14251b;
+  --inkDark:#f2ecd8; --inkSoft:#b5c6ab; --leaf:#a6e070;
   --go1:#8ee05a; --go2:#5cbf3a; --goEdge:#2f7d22;
   --sun1:#ffe27a; --sun2:#f5b82e; --sunEdge:#b97a10;
-  --tile:#fff; --tileShade:#f1e2c6; --paperTop:#fffaf0; --paperBot:#fdf0da; --wallet:#c27a0e; --ghostInk:var(--inkDark);
+  --tile:#2f4d3b; --tileShade:#1d3226; --paperTop:#27412f; --paperBot:#1d3226; --wallet:#ffcd4a; --ghostInk:var(--inkDark);
 }
-body{background:radial-gradient(120% 70% at 50% 0%,#2c4a6e 0%,#182540 55%,#111a2d 100%) fixed}
-.overlay{background:rgba(10,14,28,.55);backdrop-filter:blur(2px)}
+body{background:radial-gradient(120% 70% at 50% 0%,#2f5a3c 0%,#1b3324 55%,#0f1d14 100%) fixed}
+.overlay{background:rgba(8,16,11,.55);backdrop-filter:blur(2px)}
 .card{--panel:var(--paper);--night:var(--paper2);--line:var(--paperLine);--ink:var(--inkDark);--muted:var(--inkSoft);--gold:#d68a12;
   background:linear-gradient(180deg,var(--paperTop) 0%,var(--paper) 40%,var(--paperBot) 100%);color:var(--inkDark);
   border:2px solid var(--paperLine);box-shadow:0 5px 0 var(--paperEdge),0 14px 34px rgba(0,0,0,.38);border-radius:22px}
-.card h1{color:#f08a24;text-shadow:0 3px 0 #b35a12,0 0 0 #000;-webkit-text-stroke:1.5px #fff}
+.card h1{color:#f08a24;text-shadow:0 3px 0 #b35a12}
 .card h2{color:var(--inkDark)}
 .card p{color:var(--inkSoft)}
 .eyebrow{color:var(--leaf)}
@@ -475,7 +475,7 @@ body{background:radial-gradient(120% 70% at 50% 0%,#2c4a6e 0%,#182540 55%,#111a2
 .grovemap .node.done{color:#fff;text-shadow:0 0 3px #1d4a15,0 2px 0 #1d4a15,1px 0 0 #1d4a15,-1px 0 0 #1d4a15}
 .grovemap .nstars{text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .chesthint{opacity:1}
-.mrow .tipchip{min-height:40px}
+.mrow .tipchip{min-height:44px}
 .pager .btn.small{min-width:48px;padding-left:16px;padding-right:16px}
 .bigstars span[style*="var(--line)"]{color:#5f7d66 !important}
 .pager{display:flex;align-items:center;justify-content:center;gap:14px;font-weight:800;color:var(--muted)}
@@ -603,13 +603,6 @@ body{background:radial-gradient(120% 70% at 50% 0%,#2c4a6e 0%,#182540 55%,#111a2
 .hubgrid.six .tile .t{font-size:clamp(11px,3.1vw,14.5px);max-width:100%;white-space:nowrap;letter-spacing:0}
 #bakMsg{min-height:0;line-height:1.35;margin:2px 0 8px;flex-shrink:0}
 #saveBox,.card .field{flex-shrink:0}
-/* menu palettes (html[data-theme]); default = cream paper */
-html[data-theme="kraft"]{--paper:#eadcc0;--paper2:#dfcca8;--paperLine:#c9ad82;--paperEdge:#a8875a;--inkDark:#3b2a1d;--inkSoft:#6b5440;--tile:#f4ead6;--tileShade:#dcc7a2;--paperTop:#efe3cb;--paperBot:#e2d1b0;--leaf:#3b7a2a}
-html[data-theme="sage"]{--paper:#dfe8d6;--paper2:#cfdcc3;--paperLine:#b3c7a2;--paperEdge:#8eaa79;--inkDark:#26361f;--inkSoft:#56694b;--tile:#eef3e8;--tileShade:#c9d8bc;--paperTop:#e7eedf;--paperBot:#d4e0c8;--leaf:#2f7a2a;--wallet:#a66a08}
-html[data-theme="moss"]{--paper:#22392b;--paper2:#2b4636;--paperLine:#3f6249;--paperEdge:#14251b;--inkDark:#f2ecd8;--inkSoft:#b5c6ab;--tile:#2f4d3b;--tileShade:#1d3226;--paperTop:#27412f;--paperBot:#1d3226;--leaf:#a6e070;--wallet:#ffcd4a}
-html[data-theme="night"]{--paper:#1f2945;--paper2:#283456;--paperLine:#3b4a76;--paperEdge:#10172b;--inkDark:#eef1ff;--inkSoft:#a9b3d6;--tile:#2b385d;--tileShade:#1a2340;--paperTop:#24304f;--paperBot:#1a2340;--leaf:#9be06a;--wallet:#ffcd4a}
-html[data-theme="plum"]{--paper:#2f2442;--paper2:#3a2d52;--paperLine:#56456f;--paperEdge:#1b1429;--inkDark:#f7eefc;--inkSoft:#c5b5d8;--tile:#43345c;--tileShade:#251c36;--paperTop:#352849;--paperBot:#251c36;--leaf:#b2ea78;--wallet:#ffcd4a}
-html[data-theme="moss"] .card h1,html[data-theme="night"] .card h1,html[data-theme="plum"] .card h1{-webkit-text-stroke:0}
 .lvup .eyebrow,.card.learn .eyebrow{color:#10300a !important}
 .card .choice.evo small{color:#8a5a00 !important;opacity:1}
 .tutskip{position:absolute;top:54px;right:8px;z-index:6;min-height:40px;padding:8px 16px;border-radius:99px;border:2px solid rgba(255,255,255,.55);background:rgba(16,28,22,.78);color:#fff7e8;font:700 15px var(--body,system-ui);cursor:pointer}
@@ -630,3 +623,35 @@ html[data-theme="moss"] .card h1,html[data-theme="night"] .card h1,html[data-the
 .chestprompt{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 12px;border:2px solid #ffd970;border-radius:16px;background:rgba(255,205,74,.1);margin:4px 0}
 .chestprompt .chestsm{width:44px;height:auto}.chestprompt.stuck{border-color:#ff9a7a;background:rgba(255,111,97,.08)}.chestprompt .txt{flex:1;display:flex;align-items:center;gap:8px;color:var(--ink)}.chestprompt .txt span{font-weight:800;color:#ffd970}
 .chestprompt .cbtns{display:flex;gap:6px;width:100%}.chestprompt .cbtns .buy{flex:1 1 auto;min-height:44px;font-size:15px;padding:6px 8px;text-align:center;justify-content:center}.chestprompt .cbtns .btn{flex:0 0 auto;margin:0;min-height:44px;font-size:15px;padding:6px 12px}.chestprompt .txt b{font-size:16px}
+
+/* ---- HUD & menus slice (menus-onboarding P1/P2/P4) ---- */
+/* touch targets >= 44x44 CSS px */
+.btn,.buy,.ctrl,.tile,.coachbox .jskip,.tutskip{min-height:44px;box-sizing:border-box}
+.buy{justify-content:center}
+.coachbox .jskip{margin:-4px 0;padding:6px 8px}
+/* header: Pause only in play; the save chip takes its slot on the hub */
+.iconbtn[hidden]{display:none}
+.savechip{position:relative;color:var(--leaf)}
+.savechip .sdot{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:#c9301f;color:#fff;font:800 12px/18px var(--body);font-style:normal;text-align:center}
+.savechip .sdot[hidden]{display:none}
+/* one-row play HUD: stars + time, trail (never shrinks), then colour counters (shrink first) */
+.xprow{gap:8px;min-width:0}
+#cap{display:inline-flex;align-items:center;gap:3px;flex:none}
+#cap svg{width:18px;height:18px}
+body.adv #lv{order:0;flex:none}
+body.adv #cap{order:1}
+body.adv #keychip{order:2;flex:none}
+body.adv #goals{order:3;margin-left:auto;min-width:0;overflow:hidden;gap:6px}
+body.adv #apill{order:4;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.cap.goals .g img{width:18px;height:18px}
+.partime{margin-left:4px;font-variant-numeric:tabular-nums}
+/* hub: the hero card is a shortcut to Characters; Nest hint after the first garden */
+button.who{width:100%;font-family:var(--body);color:var(--ink);cursor:pointer}
+button.nesthint{border-color:var(--leaf)}
+button.nesthint>svg{width:26px;height:26px}
+/* Profile: the save line above already says "this device only" */
+.card .mission + .cloudbox:not(:has(button)){display:none}
+/* map star-chest bar: label stays on one line; the buttons drop below it when the row is full */
+.chestbar:has(> .chestsm){flex-wrap:wrap}
+.chestbar:has(> .chestsm) .txt{min-width:max-content}
+.chestbar:has(> .chestsm) .buy{flex:1 1 auto}
