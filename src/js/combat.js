@@ -40,7 +40,7 @@ function deliver(pt) {
     for (let a = 0; a < 26; a++) { const ang = a / 26 * TAU; particles.push({ x: pt.x, y: pt.y, vx: Math.cos(ang) * 6, vy: Math.sin(ang) * 6, life: .8, max: .8, color: a % 2 ? '#ffd970' : '#ffffff' }); }
     saveMeta();
   }
-  followers.forEach((f, i) => { if (ok(f.c)) { if (run.gotC) run.gotC[f.c] = (run.gotC[f.c] || 0) + 1; const p = fpos(i); burst(p.x, p.y, COLORS[f.c].fill, 6); (run.homeTufts = run.homeTufts || []).push({ x0: p.x, y0: p.y, x1: pt.x, y1: pt.y, c: f.c, t: -0.08 * hopIdx++, dur: 0.55 }); } });
+  followers.forEach((f, i) => { if (ok(f.c)) { if (run.gotC) run.gotC[f.c] = (run.gotC[f.c] || 0) + 1; const p = fpos(i); burst(p.x, p.y, COLORS[f.c].fill, 6); (run.homeTufts = run.homeTufts || []).push({ x0: p.x, y0: p.y, x1: pt.x, y1: pt.y, c: f.c, t: -0.08 * hopIdx, dur: 0.55, n: count, first: !hopIdx++ }); } });
   followers = followers.filter(f => !ok(f.c));
   if (trail.length > followers.length + 1) trail.length = followers.length + 1;
   if (run.boss && !pt.golden) { const br = enemies.find(o => o.type === 'boss' && o.variant === 'broc'); if (br && br.hurtT <= 0) bonkBoss(br); }
@@ -72,14 +72,13 @@ function deliver(pt) {
   const base = Math.round(count * coinMult());
   const extra = Math.round(bonus * coinMult());
   run.coins += base + extra;
-  floatText(pt.x, pt.y, t('seeds', base), pt.rainbow ? '#ffffff' : COLORS[pt.cs[0]].fill);
+  floatText(pt.x, pt.y, t('seeds', base + extra) + (extra ? t('inRow', top) : ''), extra ? '#ffcd4a' : pt.rainbow ? '#ffffff' : COLORS[pt.cs[0]].fill); // one seed line (art-feel P2)
   if (extra) {
-    floatText(pt.x, pt.y - 0.7, t('streak', top, extra), '#ffcd4a');
     const pc = { x: pt.x, y: pt.y };
     for (let a = 0; a < 20; a++) { const ang = a / 20 * Math.PI * 2; particles.push({ x: pc.x, y: pc.y, vx: Math.cos(ang) * 5, vy: Math.sin(ang) * 5, life: .6, max: .6, color: '#ffcd4a' }); }
     sfx('streak');
   }
-  sfx('home');
+  deliverFeel(pt, count); // sound + home reaction scaled by the trail (fx.js)
   if (evo.comet) cometT = 4;
   if (run.kind === 'endless') {
     run.xp += count;

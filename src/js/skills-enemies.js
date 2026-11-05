@@ -5,7 +5,7 @@ function drawBeamFx(fx) {
   const a = fx.life / fx.max, k = 1 - a, x0 = (fx.x0 + .5) * cell, y0 = (fx.y0 + .5) * cell, x1 = (fx.x1 + .5) * cell, y1 = (fx.y1 + .5) * cell;
   const len = Math.hypot(x1 - x0, y1 - y0), ang = Math.atan2(y1 - y0, x1 - x0);
   if (fx.bolt) {
-    const im = spr('fx-bolt'), flick = Math.floor(time * 16) % 2;
+    const im = spr('fx-bolt'), flick = reduceMotion ? 0 : Math.floor(time * 6) % 2; // <= 3 flips/s
     ctx.save(); ctx.globalAlpha = Math.min(1, a * 1.6); ctx.translate(x0, y0); ctx.rotate(ang); if (flick) ctx.scale(1, -1);
     ctx.drawImage(im, 0, -cell * 0.45, Math.max(cell, len), cell * 0.9); ctx.restore();
     fxPic(ctx, 'fx-twinkle', x1, y1, cell * (0.6 + 0.5 * k), time * 3, a);
@@ -203,7 +203,7 @@ function updateDirector(dt) {
   run.gt += dt;
   if (Math.floor(run.gt) !== before) updateHud();
   const pressure = run.kind === 'endless' || (run.adv && run.adv.g >= 8 && !(run.adv.g === 8 && run.adv.i < 3) && !run.daily); // night starts at 8-3, after the Hail Cloud has had 8-1 and 8-2 to itself
-  if (pressure && !run.wiltMsg && run.gt > 90) { run.wiltMsg = true; banner(t('wilting'), '#ff9a5c', 'clock'); sfx('hurt'); }
+  if (pressure && !run.wiltMsg && run.gt > 90) { run.wiltMsg = true; banner(t('wilting'), '#ff9a5c', 'clock'); sfx('wilt'); }
   if (pressure && !run.nightOn && run.gt > 180) {
     run.nightOn = true;
     const pp = ppos();
@@ -215,7 +215,7 @@ function updateDirector(dt) {
       enemies.push(ne2);
     }
     banner(t('nightFalls'), '#6a4be0', 'ghost');
-    sfx('hurt');
+    sfx('night');
   }
 }
 function hurt() {
@@ -234,9 +234,7 @@ function hurt() {
   run.hitThisGarden = true;
   run.hits++;
   invuln = ghostT();
-  shake = 0.35;
-  burst(p.x, p.y, '#ff6f61', 14);
-  sfx('hurt');
+  hitFeel(p); // hit-stop, kick, burst and the damage buzz (fx.js)
   updateHud();
   if (run.hp <= 0) { gameOver(); return; }
   const drop = Math.ceil(followers.length * Math.max(0.2, 0.4 - 0.067 * (meta.up.grip || 0)));
